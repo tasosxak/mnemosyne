@@ -1,0 +1,42 @@
+/[ \t]/  { /* Skip blanks and tabs. */ }
+
+/input/ { return INPUT }
+/output/ { return OUTPUT }
+
+/,/ { return COMMA }
+/;/ {return SC}
+/:/ {return DOTS}
+/\(/ { return LPAR }
+/\)/ { return RPAR }
+/\[/ { return LBR }
+/\]/ { return RBR }
+/>=/ { return GE }
+/>/ { return G}
+/#/ {return DIESI}
+/<=/ { return LE }
+/\// { return DIV}
+/</ { return L}
+/\+/ { return ADD}
+/\-/ { return MINUS}
+/@/ { return AT}
+/\^/ { return EXP}
+/\*/ { return TIMES}
+/event/ {return EVENT}
+/end/ {return END}
+/and/ {return AND}
+/or/ {return OR}
+/<-/ {return ASSIGN}
+/not/ {return NOT}
+/ite/ {return ITE}
+/bool/ {return BOOL}
+/int/ {return INT}
+/-[0-9]+/ { lval.n,_ = strconv.Atoi(yylex.Text()); return NUM }
+/[0-9]+/ { lval.n,_ = strconv.Atoi(yylex.Text()); return NUM }
+/[a-zA-Z][a-zA-Z0-9]*/ { lval.name = yylex.Text(); return ID}
+
+/\n/ { }
+/./ {  }
+
+//
+package main
+import ("strconv")

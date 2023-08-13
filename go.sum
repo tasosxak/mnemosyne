@@ -1,0 +1,4 @@
+github.com/blynn/nex v0.0.0-20210330102341-1a3320dab988 h1:n52kgfiPyHIfpQxmzlN7twzaKtQy1sgW7RrYhIPxdIk=
+github.com/blynn/nex v0.0.0-20210330102341-1a3320dab988/go.mod h1:FYQGyGHZWt/nYpr26buSZp4+WR8dN3LB800EGQ1VAz4=
+golang.org/x/tools v0.12.1-0.20230810210603-6b4d1de19b45 h1:6RpPV8cT6n9ZNUdhavu5GZPjCWqLRkw5A7D74Xxf3e4=
+golang.org/x/tools v0.12.1-0.20230810210603-6b4d1de19b45/go.mod h1:Sc0INKfu04TlqNoRA1hgpFZbhYXHPr4V5DzpSBTPqQM=

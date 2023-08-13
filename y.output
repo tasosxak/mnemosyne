@@ -1,0 +1,986 @@
+
+state 0
+	$accept: .program $end 
+	program: .    (1)
+
+	EVENT  shift 4
+	.  reduce 1 (src line 34)
+
+	eventlist  goto 2
+	event  goto 3
+	program  goto 1
+
+state 1
+	$accept:  program.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	program:  eventlist.    (2)
+	eventlist:  eventlist.event 
+
+	EVENT  shift 4
+	.  reduce 2 (src line 38)
+
+	event  goto 5
+
+state 3
+	eventlist:  event.    (4)
+
+	.  reduce 4 (src line 48)
+
+
+state 4
+	event:  EVENT.ID DOTS inputdecl outputdecl streamdecl END 
+
+	ID  shift 6
+	.  error
+
+
+state 5
+	eventlist:  eventlist event.    (3)
+
+	.  reduce 3 (src line 44)
+
+
+state 6
+	event:  EVENT ID.DOTS inputdecl outputdecl streamdecl END 
+
+	DOTS  shift 7
+	.  error
+
+
+state 7
+	event:  EVENT ID DOTS.inputdecl outputdecl streamdecl END 
+
+	INPUT  shift 9
+	.  error
+
+	inputdecl  goto 8
+
+state 8
+	event:  EVENT ID DOTS inputdecl.outputdecl streamdecl END 
+
+	OUTPUT  shift 11
+	.  error
+
+	outputdecl  goto 10
+
+state 9
+	inputdecl:  INPUT.varlist SC 
+
+	BOOL  shift 15
+	INT  shift 16
+	.  error
+
+	vardecl  goto 13
+	varlist  goto 12
+	type  goto 14
+
+state 10
+	event:  EVENT ID DOTS inputdecl outputdecl.streamdecl END 
+
+	ID  shift 20
+	.  error
+
+	statementlist  goto 18
+	streamdecl  goto 17
+	statement  goto 19
+
+state 11
+	outputdecl:  OUTPUT.varlist SC 
+
+	BOOL  shift 15
+	INT  shift 16
+	.  error
+
+	vardecl  goto 13
+	varlist  goto 21
+	type  goto 14
+
+state 12
+	inputdecl:  INPUT varlist.SC 
+	varlist:  varlist.COMMA vardecl 
+
+	COMMA  shift 23
+	SC  shift 22
+	.  error
+
+
+state 13
+	varlist:  vardecl.    (45)
+
+	.  reduce 45 (src line 287)
+
+
+state 14
+	vardecl:  type.ID 
+
+	ID  shift 24
+	.  error
+
+
+state 15
+	type:  BOOL.    (47)
+
+	.  reduce 47 (src line 309)
+
+
+state 16
+	type:  INT.    (48)
+
+	.  reduce 48 (src line 313)
+
+
+state 17
+	event:  EVENT ID DOTS inputdecl outputdecl streamdecl.END 
+
+	END  shift 25
+	.  error
+
+
+state 18
+	streamdecl:  statementlist.    (8)
+	statementlist:  statementlist.statement 
+
+	ID  shift 20
+	.  reduce 8 (src line 101)
+
+	statement  goto 26
+
+state 19
+	statementlist:  statement.    (10)
+
+	.  reduce 10 (src line 114)
+
+
+state 20
+	statement:  ID.ASSIGN expr SC 
+
+	ASSIGN  shift 27
+	.  error
+
+
+state 21
+	outputdecl:  OUTPUT varlist.SC 
+	varlist:  varlist.COMMA vardecl 
+
+	COMMA  shift 23
+	SC  shift 28
+	.  error
+
+
+state 22
+	inputdecl:  INPUT varlist SC.    (6)
+
+	.  reduce 6 (src line 68)
+
+
+state 23
+	varlist:  varlist COMMA.vardecl 
+
+	BOOL  shift 15
+	INT  shift 16
+	.  error
+
+	vardecl  goto 29
+	type  goto 14
+
+state 24
+	vardecl:  type ID.    (46)
+
+	.  reduce 46 (src line 293)
+
+
+state 25
+	event:  EVENT ID DOTS inputdecl outputdecl streamdecl END.    (5)
+
+	.  reduce 5 (src line 53)
+
+
+state 26
+	statementlist:  statementlist statement.    (9)
+
+	.  reduce 9 (src line 106)
+
+
+state 27
+	statement:  ID ASSIGN.expr SC 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	ITE  shift 35
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	itexpr  goto 32
+	expr  goto 30
+	mathexpr  goto 33
+	arithmexpr  goto 31
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 34
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 28
+	outputdecl:  OUTPUT varlist SC.    (7)
+
+	.  reduce 7 (src line 85)
+
+
+state 29
+	varlist:  varlist COMMA vardecl.    (44)
+
+	.  reduce 44 (src line 283)
+
+
+state 30
+	statement:  ID ASSIGN expr.SC 
+
+	SC  shift 51
+	.  error
+
+
+state 31
+	expr:  arithmexpr.    (12)
+
+	.  reduce 12 (src line 139)
+
+
+state 32
+	expr:  itexpr.    (13)
+
+	.  reduce 13 (src line 142)
+
+
+state 33
+	arithmexpr:  mathexpr.    (14)
+	relexpr:  mathexpr.LE mathexpr 
+	relexpr:  mathexpr.L mathexpr 
+	relexpr:  mathexpr.GE mathexpr 
+	relexpr:  mathexpr.G mathexpr 
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	GE  shift 54
+	G  shift 55
+	LE  shift 52
+	L  shift 53
+	ADD  shift 56
+	MINUS  shift 57
+	.  reduce 14 (src line 148)
+
+
+state 34
+	arithmexpr:  logexpr.    (15)
+	logexpr:  logexpr.OR logpart 
+
+	OR  shift 58
+	.  reduce 15 (src line 151)
+
+
+state 35
+	itexpr:  ITE.LPAR logexpr COMMA arithmexpr COMMA arithmexpr RPAR 
+
+	LPAR  shift 59
+	.  error
+
+
+state 36
+	mathexpr:  addpart.    (31)
+	addpart:  addpart.TIMES mulpart 
+	addpart:  addpart.DIV mulpart 
+
+	DIV  shift 61
+	TIMES  shift 60
+	.  reduce 31 (src line 216)
+
+
+state 37
+	logexpr:  logpart.    (17)
+	logpart:  logpart.AND logunary 
+
+	AND  shift 62
+	.  reduce 17 (src line 159)
+
+
+state 38
+	addpart:  mulpart.    (34)
+
+	.  reduce 34 (src line 231)
+
+
+state 39
+	logpart:  logunary.    (19)
+
+	.  reduce 19 (src line 167)
+
+
+state 40
+	mulpart:  term.EXP mulpart 
+	unary:  term.    (39)
+
+	EXP  shift 63
+	.  reduce 39 (src line 252)
+
+
+state 41
+	mulpart:  unary.    (36)
+
+	.  reduce 36 (src line 239)
+
+
+state 42
+	logunary:  NOT.logunary 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 65
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logunary  goto 64
+	logterm  goto 43
+
+state 43
+	logunary:  logterm.    (21)
+
+	.  reduce 21 (src line 175)
+
+
+state 44
+	term:  ID.    (40)
+
+	.  reduce 40 (src line 256)
+
+
+state 45
+	logterm:  LPAR.logexpr RPAR 
+	term:  LPAR.mathexpr RPAR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 67
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 66
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 46
+	term:  NUM.    (42)
+
+	.  reduce 42 (src line 265)
+
+
+state 47
+	unary:  MINUS.unary 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	unary  goto 68
+	term  goto 69
+
+state 48
+	unary:  AT.term LBR arithmexpr RBR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	.  error
+
+	term  goto 71
+
+state 49
+	logterm:  relexpr.    (22)
+
+	.  reduce 22 (src line 180)
+
+
+state 50
+	logterm:  DIESI.term 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	.  error
+
+	term  goto 72
+
+state 51
+	statement:  ID ASSIGN expr SC.    (11)
+
+	.  reduce 11 (src line 119)
+
+
+state 52
+	relexpr:  mathexpr LE.mathexpr 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 73
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 53
+	relexpr:  mathexpr L.mathexpr 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 74
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 54
+	relexpr:  mathexpr GE.mathexpr 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 75
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 55
+	relexpr:  mathexpr G.mathexpr 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 76
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 56
+	mathexpr:  mathexpr ADD.addpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	addpart  goto 77
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 57
+	mathexpr:  mathexpr MINUS.addpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	addpart  goto 78
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 58
+	logexpr:  logexpr OR.logpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 65
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logpart  goto 79
+	logunary  goto 39
+	logterm  goto 43
+
+state 59
+	itexpr:  ITE LPAR.logexpr COMMA arithmexpr COMMA arithmexpr RPAR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 65
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 80
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 60
+	addpart:  addpart TIMES.mulpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mulpart  goto 81
+	unary  goto 41
+	term  goto 40
+
+state 61
+	addpart:  addpart DIV.mulpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mulpart  goto 82
+	unary  goto 41
+	term  goto 40
+
+state 62
+	logpart:  logpart AND.logunary 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 65
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logunary  goto 83
+	logterm  goto 43
+
+state 63
+	mulpart:  term EXP.mulpart 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mulpart  goto 84
+	unary  goto 41
+	term  goto 40
+
+state 64
+	logunary:  NOT logunary.    (20)
+
+	.  reduce 20 (src line 172)
+
+
+state 65
+	relexpr:  mathexpr.LE mathexpr 
+	relexpr:  mathexpr.L mathexpr 
+	relexpr:  mathexpr.GE mathexpr 
+	relexpr:  mathexpr.G mathexpr 
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	GE  shift 54
+	G  shift 55
+	LE  shift 52
+	L  shift 53
+	ADD  shift 56
+	MINUS  shift 57
+	.  error
+
+
+state 66
+	logexpr:  logexpr.OR logpart 
+	logterm:  LPAR logexpr.RPAR 
+
+	RPAR  shift 85
+	OR  shift 58
+	.  error
+
+
+state 67
+	relexpr:  mathexpr.LE mathexpr 
+	relexpr:  mathexpr.L mathexpr 
+	relexpr:  mathexpr.GE mathexpr 
+	relexpr:  mathexpr.G mathexpr 
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+	term:  LPAR mathexpr.RPAR 
+
+	RPAR  shift 86
+	GE  shift 54
+	G  shift 55
+	LE  shift 52
+	L  shift 53
+	ADD  shift 56
+	MINUS  shift 57
+	.  error
+
+
+state 68
+	unary:  MINUS unary.    (37)
+
+	.  reduce 37 (src line 243)
+
+
+state 69
+	unary:  term.    (39)
+
+	.  reduce 39 (src line 252)
+
+
+state 70
+	term:  LPAR.mathexpr RPAR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 70
+	MINUS  shift 47
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 87
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+
+state 71
+	unary:  AT term.LBR arithmexpr RBR 
+
+	LBR  shift 88
+	.  error
+
+
+state 72
+	logterm:  DIESI term.    (24)
+
+	.  reduce 24 (src line 186)
+
+
+state 73
+	relexpr:  mathexpr LE mathexpr.    (25)
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	ADD  shift 56
+	MINUS  shift 57
+	.  reduce 25 (src line 192)
+
+
+state 74
+	relexpr:  mathexpr L mathexpr.    (26)
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	ADD  shift 56
+	MINUS  shift 57
+	.  reduce 26 (src line 195)
+
+
+state 75
+	relexpr:  mathexpr GE mathexpr.    (27)
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	ADD  shift 56
+	MINUS  shift 57
+	.  reduce 27 (src line 198)
+
+
+state 76
+	relexpr:  mathexpr G mathexpr.    (28)
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+
+	ADD  shift 56
+	MINUS  shift 57
+	.  reduce 28 (src line 201)
+
+
+state 77
+	mathexpr:  mathexpr ADD addpart.    (29)
+	addpart:  addpart.TIMES mulpart 
+	addpart:  addpart.DIV mulpart 
+
+	DIV  shift 61
+	TIMES  shift 60
+	.  reduce 29 (src line 210)
+
+
+state 78
+	mathexpr:  mathexpr MINUS addpart.    (30)
+	addpart:  addpart.TIMES mulpart 
+	addpart:  addpart.DIV mulpart 
+
+	DIV  shift 61
+	TIMES  shift 60
+	.  reduce 30 (src line 213)
+
+
+state 79
+	logexpr:  logexpr OR logpart.    (16)
+	logpart:  logpart.AND logunary 
+
+	AND  shift 62
+	.  reduce 16 (src line 156)
+
+
+state 80
+	logexpr:  logexpr.OR logpart 
+	itexpr:  ITE LPAR logexpr.COMMA arithmexpr COMMA arithmexpr RPAR 
+
+	COMMA  shift 89
+	OR  shift 58
+	.  error
+
+
+state 81
+	addpart:  addpart TIMES mulpart.    (32)
+
+	.  reduce 32 (src line 221)
+
+
+state 82
+	addpart:  addpart DIV mulpart.    (33)
+
+	.  reduce 33 (src line 226)
+
+
+state 83
+	logpart:  logpart AND logunary.    (18)
+
+	.  reduce 18 (src line 164)
+
+
+state 84
+	mulpart:  term EXP mulpart.    (35)
+
+	.  reduce 35 (src line 236)
+
+
+state 85
+	logterm:  LPAR logexpr RPAR.    (23)
+
+	.  reduce 23 (src line 183)
+
+
+state 86
+	term:  LPAR mathexpr RPAR.    (41)
+
+	.  reduce 41 (src line 262)
+
+
+state 87
+	mathexpr:  mathexpr.ADD addpart 
+	mathexpr:  mathexpr.MINUS addpart 
+	term:  LPAR mathexpr.RPAR 
+
+	RPAR  shift 86
+	ADD  shift 56
+	MINUS  shift 57
+	.  error
+
+
+state 88
+	unary:  AT term LBR.arithmexpr RBR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 33
+	arithmexpr  goto 90
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 34
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 89
+	itexpr:  ITE LPAR logexpr COMMA.arithmexpr COMMA arithmexpr RPAR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 33
+	arithmexpr  goto 91
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 34
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 90
+	unary:  AT term LBR arithmexpr.RBR 
+
+	RBR  shift 92
+	.  error
+
+
+state 91
+	itexpr:  ITE LPAR logexpr COMMA arithmexpr.COMMA arithmexpr RPAR 
+
+	COMMA  shift 93
+	.  error
+
+
+state 92
+	unary:  AT term LBR arithmexpr RBR.    (38)
+
+	.  reduce 38 (src line 246)
+
+
+state 93
+	itexpr:  ITE LPAR logexpr COMMA arithmexpr COMMA.arithmexpr RPAR 
+
+	ID  shift 44
+	NUM  shift 46
+	LPAR  shift 45
+	MINUS  shift 47
+	NOT  shift 42
+	DIESI  shift 50
+	AT  shift 48
+	.  error
+
+	mathexpr  goto 33
+	arithmexpr  goto 94
+	addpart  goto 36
+	mulpart  goto 38
+	unary  goto 41
+	term  goto 40
+	relexpr  goto 49
+	logexpr  goto 34
+	logpart  goto 37
+	logunary  goto 39
+	logterm  goto 43
+
+state 94
+	itexpr:  ITE LPAR logexpr COMMA arithmexpr COMMA arithmexpr.RPAR 
+
+	RPAR  shift 95
+	.  error
+
+
+state 95
+	itexpr:  ITE LPAR logexpr COMMA arithmexpr COMMA arithmexpr RPAR.    (43)
+
+	.  reduce 43 (src line 270)
+
+
+34 terminals, 25 nonterminals
+49 grammar rules, 96/16000 states
+0 shift/reduce, 0 reduce/reduce conflicts reported
+74 working sets used
+memory: parser 173/240000
+54 extra closures
+196 shift entries, 1 exceptions
+55 goto entries
+100 entries saved by goto default
+Optimizer space used: output 126/240000
+126 table entries, 0 zero
+maximum spread: 34, maximum offset: 93
