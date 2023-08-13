@@ -104,11 +104,11 @@ end
 
 ### Run
 ```sh
-mnemosyne<test.mn
+./mnemosyne < examples/test.mn
 ```
 
-The tools generates a .py file, you can execute it running the command below:
+The tool generates a .py file, you can execute it running the command below:
 
 ```sh
-python code.py
+python3 code.py
 ```
