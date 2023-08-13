@@ -88,7 +88,7 @@ nex -o internals/lexer.go internals/lexer.nex \
 
 ### Example
 
-```sh
+```c++
 event car:
 input int speed, int speedLimit;
 output int deltaSpeed, bool underLimit;
@@ -97,8 +97,9 @@ underLimit <- speed <= speedLimit;
 end
 event detect:
 input bool objectDetected;
-output int speed;
-speed <- ite(#objectDetected and speed < 5 , 0, 5);
+output int speed, bool detected;
+speed <- ite(#objectDetected and @speed[10] < 5 , 0, 5);
+detected <- #@objectDetected[#objectDetected];
 end
 ```
 
