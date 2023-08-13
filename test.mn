@@ -1,0 +1,11 @@
+event car:
+input int speed, int speedLimit;
+output int deltaSpeed, bool underLimit;
+deltaSpeed <-  speed - @speed[speed];
+underLimit <- speed <= speedLimit;
+end
+event detect:
+input bool objectDetected;
+output int speed;
+speed <- ite(#objectDetected and speed < 5 , 0, 5);
+end
