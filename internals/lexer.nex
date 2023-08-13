@@ -21,6 +21,8 @@
 /@/ { return AT}
 /\^/ { return EXP}
 /\*/ { return TIMES}
+/false/ {return FALSE}
+/true/ {return TRUE}
 /event/ {return EVENT}
 /end/ {return END}
 /and/ {return AND}

@@ -23,7 +23,7 @@ Node
 
 }
 
-%token  INPUT ID END OUTPUT EVENT ASSIGN COMMA NUM DOTS LPAR RPAR LBR RBR BOOL INT GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT
+%token  INPUT ID END OUTPUT EVENT ASSIGN COMMA NUM DOTS LPAR RPAR LBR RBR BOOL INT GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE
 %token <name> ID
 %token <n> NUM
 %type <Node> itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm
@@ -187,6 +187,18 @@ logterm: relexpr {
     assertNodeType($2, Boolean)
     $$ = $2;
 }
+| DIESI AT term LBR logexpr RBR {
+   
+    assertSameTypeNodes($3, $5)
+    $$ = PastOpNode{$3, $3.(*IDNode).getType(), $5}
+
+}
+| FALSE {
+    $$ = BooleanNode{"False"}
+}
+| TRUE {
+    $$ = BooleanNode{"True"}
+}
 ;
 
 relexpr: mathexpr LE mathexpr {
@@ -244,7 +256,7 @@ unary: MINUS unary {
     $$ = UnaryOpNode{"-", $2, Integer}
 }
 | AT term LBR arithmexpr RBR {
-
+  
     assertSameTypeNodes($2, $4)
     $$ = PastOpNode{$2, $2.(*IDNode).getType(), $4}
 
@@ -379,7 +391,7 @@ func (n EventNode) compile() string {
     outStreamEvent := "'" + n.Name + "'" 
 
     for i , symbol := range inputDefs[n.CurIndex] {
-        mapInputs +=  ptabs(tabs+1) + symbol.compile() + " = " + strType(symbol.Type) + "(inp[" + strconv.Itoa(i+1) + "]) \n" 
+        mapInputs +=  ptabs(tabs+1) + symbol.compile() + " = " + strType(symbol.Type) + "(int(inp[" + strconv.Itoa(i+1) + "])) \n" 
     }
 
     for _ , symbol := range inputDefs[n.CurIndex] {
@@ -526,6 +538,18 @@ type NumNode struct {
     Value int
 }
 
+type BooleanNode struct {
+    Value string
+}
+
+func (n BooleanNode) compile() string {
+    return " " + n.Value + " "
+}
+
+func (n BooleanNode) getType() Typos {
+    return Boolean
+}
+
 func (n NumNode) compile() string {
     return " " + strconv.Itoa(n.Value) + " "
 }
@@ -541,7 +565,7 @@ type PastOpNode struct {
 }
 
 func (n PastOpNode) compile() string {
-    return "(PAST_" + n.Term.compile() + " if " + "PAST_" + n.Term.compile() + " else " + n.Else.compile() + ")"
+    return "(PAST_" + n.Term.compile() + " if " + "PAST_" + n.Term.compile() + "!= None else " + n.Else.compile() + ")"
 }
 
 func (n PastOpNode) getType() Typos {

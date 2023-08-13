@@ -8,6 +8,71 @@ Mnemosyne is a Go project designed to preprocess event data for the DejaVu runti
 - **Event Data Preprocessing:** Mnemosyne prepares event data for use with the DejaVu runtime monitor, making it easier to detect and analyze runtime events.
 
 
+### Syntax
+```sh
+<program> ::= <eventlist> | e
+
+<eventlist> ::= <eventlist> <event>
+			| <event>
+
+<event> ::= EVENT ID DOTS <inputdecl> <outputdecl> <streamdecl> END
+
+<inputdecl> ::= INPUT <varlist> SC 
+
+<outputdecl> ::= OUTPUT <varlist> SC
+
+<streamdecl> ::= <statementlist>
+
+<statementlist> ::= <statementlist> <statement>
+				| <statement>
+
+<statement> ::= ID ASSIGN <expr> SC
+
+<expr> ::= <arithmexpr> | <itexpr>
+
+<arithmexpr> ::= <mathexpr> | <logexpr>
+
+<logexpr> ::= <logexpr> OR <logpart> 
+		   | <logpart>
+
+<logpart> ::= logpart AND <logunary>
+		   | <logunary>
+<logunary> ::= NOT <logunary> | <logterm>
+
+<logterm> ::= <relexpr> 
+		   | LPAR <logexpr> RPAR
+		   | DIESI <term>
+		   | DIESI AT <term> LBR logexpr RBR
+		   | FALSE
+ 		   | TRUE
+
+<relexpr> ::= <mathexpr> RELOP <mathexpr>
+
+<mathexpr> ::= <mathexpr> ADD <addpart>
+		    | <mathexpr> MINUS <addpart>
+		    | <addpart>
+
+<addpart> ::= <addpart> TIMES <mulpart>
+		   | <addpart> DIV <mulpart>
+		   | <mulpart>
+
+<mulpart> ::= <term> EXP <mulpart>
+		   | <unary>
+
+<unary> ::= MINUS <unary>
+		 | AT <term> LBR <arithmexpr> RBR
+		 | <term>
+
+<term> ::= ID
+
+<itexpr> ::= ITE LPAR logexpr COMMA <arithmexpr> COMMA <arithmexpr> RPAR 
+
+<varlist> ::= <varlist> COMMA <vardecl>
+		  | <vardecl>
+
+<vardecl> ::= <type> ID
+<type> ::= BOOL | INT
+```
 ### Prerequisites
 
 - Go (version 1.21.0)
