@@ -1,0 +1,5 @@
+prop P_global: Exists local_monitor . Exists  delta_steering . Exists
+                difference_speed . instance(local_monitor, delta_steering,
+                difference_speed) & ((local_monitor='True' & delta_steering<45)
+                -> difference_speed<0) & (( delta_steering >= 45 &
+                local_monitor='True') -> difference_speed < -5)

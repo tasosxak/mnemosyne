@@ -50,6 +50,7 @@ Mnemosyne is a Go project designed to preprocess event data for the DejaVu runti
 
 <mathexpr> ::= <mathexpr> ADD <addpart>
 		    | <mathexpr> MINUS <addpart>
+			| PIPE <mathexpr> PIPE
 		    | <addpart>
 
 <addpart> ::= <addpart> TIMES <mulpart>
@@ -63,7 +64,11 @@ Mnemosyne is a Go project designed to preprocess event data for the DejaVu runti
 		 | AT <term> LBR <arithmexpr> RBR
 		 | <term>
 
-<term> ::= ID
+<term> ::= <identifier>
+		 | LPAR mathexpr RPAR
+		 | NUM
+
+<identifier> ::= ID
 
 <itexpr> ::= ITE LPAR logexpr COMMA <arithmexpr> COMMA <arithmexpr> RPAR 
 
@@ -105,11 +110,11 @@ end
 
 ### Run
 ```sh
-./mnemosyne < examples/test.mn
+./mnemosyne examples/default/test.mn
 ```
 
 The tool generates a .py file, you can execute it running the command below:
 
 ```sh
-python3 code.py
+python3 examples/default/test.mn.py
 ```

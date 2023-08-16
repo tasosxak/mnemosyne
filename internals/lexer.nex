@@ -9,9 +9,12 @@
 /\(/ { return LPAR }
 /\)/ { return RPAR }
 /\[/ { return LBR }
+/\|/ { return PIPE}
 /\]/ { return RBR }
 />=/ { return GE }
 />/ { return G}
+/<>/ {return NEQ}
+/=/ { return EQ}
 /#/ {return DIESI}
 /<=/ { return LE }
 /\// { return DIV}
@@ -40,5 +43,5 @@
 /./ {  }
 
 //
-package main
+package internals
 import ("strconv")

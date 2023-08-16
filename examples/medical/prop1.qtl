@@ -1,0 +1,2 @@
+prop P_global: (!P[<=50] (Exists diff_bis . instance(diff_bis,
+         1)) -> (Exists mt . instance(mt,0) & mt <= 11000)

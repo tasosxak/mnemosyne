@@ -1,4 +1,4 @@
-package main
+package internals
 
 import (
 	"strconv"
@@ -503,6 +503,24 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
 
+	// \|
+	{[]bool{false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 124:
+				return 1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 124:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
+
 	// \]
 	{[]bool{false, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
@@ -564,6 +582,55 @@ var dfas = []dfa{
 		func(r rune) int {
 			switch r {
 			case 62:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
+
+	// <>
+	{[]bool{false, false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 60:
+				return 1
+			case 62:
+				return -1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 60:
+				return -1
+			case 62:
+				return 2
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 60:
+				return -1
+			case 62:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1}, nil},
+
+	// =
+	{[]bool{false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 61:
+				return 1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 61:
 				return -1
 			}
 			return -1
@@ -1571,115 +1638,127 @@ OUTER0:
 			}
 		case 9:
 			{
-				return RBR
+				return PIPE
 			}
 		case 10:
 			{
-				return GE
+				return RBR
 			}
 		case 11:
 			{
-				return G
+				return GE
 			}
 		case 12:
 			{
-				return DIESI
+				return G
 			}
 		case 13:
 			{
-				return LE
+				return NEQ
 			}
 		case 14:
 			{
-				return DIV
+				return EQ
 			}
 		case 15:
 			{
-				return L
+				return DIESI
 			}
 		case 16:
 			{
-				return ADD
+				return LE
 			}
 		case 17:
 			{
-				return MINUS
+				return DIV
 			}
 		case 18:
 			{
-				return AT
+				return L
 			}
 		case 19:
 			{
-				return EXP
+				return ADD
 			}
 		case 20:
 			{
-				return TIMES
+				return MINUS
 			}
 		case 21:
 			{
-				return FALSE
+				return AT
 			}
 		case 22:
 			{
-				return TRUE
+				return EXP
 			}
 		case 23:
 			{
-				return EVENT
+				return TIMES
 			}
 		case 24:
 			{
-				return END
+				return FALSE
 			}
 		case 25:
 			{
-				return AND
+				return TRUE
 			}
 		case 26:
 			{
-				return OR
+				return EVENT
 			}
 		case 27:
 			{
-				return ASSIGN
+				return END
 			}
 		case 28:
 			{
-				return NOT
+				return AND
 			}
 		case 29:
 			{
-				return ITE
+				return OR
 			}
 		case 30:
 			{
-				return BOOL
+				return ASSIGN
 			}
 		case 31:
 			{
-				return INT
+				return NOT
 			}
 		case 32:
 			{
-				lval.n, _ = strconv.Atoi(yylex.Text())
-				return NUM
+				return ITE
 			}
 		case 33:
+			{
+				return BOOL
+			}
+		case 34:
+			{
+				return INT
+			}
+		case 35:
 			{
 				lval.n, _ = strconv.Atoi(yylex.Text())
 				return NUM
 			}
-		case 34:
+		case 36:
+			{
+				lval.n, _ = strconv.Atoi(yylex.Text())
+				return NUM
+			}
+		case 37:
 			{
 				lval.name = yylex.Text()
 				return ID
 			}
-		case 35:
+		case 38:
 			{
 			}
-		case 36:
+		case 39:
 			{
 			}
 		default:

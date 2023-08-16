@@ -1,0 +1,6 @@
+event instance:
+input int bis, int bisTarget;
+output int deltaBis, bool stepChange;
+deltaBis <-  |bis - @bis[bis]|;
+stepChange <- ite(bisTarget <> @bisTarget[bisTarget], true, false);
+end

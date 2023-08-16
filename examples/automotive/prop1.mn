@@ -1,0 +1,7 @@
+event instance:
+input int vDetected, int vGroundTruth, int steering, int speed;
+output bool correctDetection, int deltaSteering, int deltaSpeed;
+correctDetection <- vDetected = vGroundTruth;
+deltaSteering <-  |steering - @steering[steering]|;
+deltaSpeed <- speed - @speed[speed];
+end
