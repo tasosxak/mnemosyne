@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+var Kafka bool = false
 var tabs int = 0
 
 const (
@@ -154,24 +155,38 @@ func (n EventNode) compile() string {
 	outStreamEvent := "'" + n.Name + "'"
 
 	for i, symbol := range inputDefs[n.CurIndex] {
-		mapInputs += ptabs(tabs+1) + symbol.compile() + " = " + strType(symbol.Type) + "(int(inp[" + strconv.Itoa(i+1) + "])) \n"
+		mapInputs += ptabs(tabs+2) + symbol.compile() + " = " + strType(symbol.Type) + "(int(inp[" + strconv.Itoa(i+1) + "])) \n"
 	}
 
 	for _, symbol := range inputDefs[n.CurIndex] {
-		alterPastVars += ptabs(tabs+1) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
+		alterPastVars += ptabs(tabs+2) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
 	}
 
 	for _, symbol := range outputDefs[n.CurIndex] {
-		alterPastVars += ptabs(tabs+1) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
+		alterPastVars += ptabs(tabs+2) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
 	}
 
 	for _, symbol := range outputDefs[n.CurIndex] {
 		outStreamEvent += " + ',' + str(" + symbol.compile() + ")"
 	}
 
-	output := ptabs(tabs) + "if inp[0] == '" + n.Name + "' : " + "\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + ptabs(tabs+1) + "print(" + outStreamEvent + ") \n"
+	output := ptabs(tabs+1) + "if inp[0] == '" + n.Name + "' : " + "\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars  + compileOutEvents(outStreamEvent) +  "\n"
 	tabs -= 1
 	return output
+}
+
+func compileOutEvents(outEvent string) string {
+
+	var out string
+
+	if Kafka == true {
+		out += ptabs(tabs+2) + "kafka_handler.send_event(" + outEvent + ")\n"
+		out += ptabs(tabs+2) + "kafka_handler.receive_feedback()\n"
+	} else {
+		out += ptabs(tabs+2) + "print(" + outEvent + ")\n"
+	}
+
+	return out
 }
 
 func (n EmptyProgramNode) compile() string {
@@ -194,19 +209,49 @@ func (n ProgramNode) compile() string {
 
 	}
 
-	return compileOperators() + bufferDecls + "while True:\n" + ptabs(tabs+1) + "inp = input()\n" + ptabs(tabs+1) + "inp = inp.split(',') \n" + n.Events.compile()
+	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" +  compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "inp = input()\n" + ptabs(tabs+2) + "inp = inp.split(',') \n" + n.Events.compile()
 
 }
 
 func compileOperators() string {
-	return "def ite(condition, b1, b2): \n\treturn b1 if condition else b2\n"
+	return "def ite(condition, b1, b2): \n\treturn b1 if condition else b2\n\n"
+}
+
+func compileImportStatements() string {
+	return "from kafka import KafkaProducer, KafkaConsumer\n\n"
+}
+
+func compileKafkaInstance() string {
+
+	if ! Kafka {
+		return ""
+	}
+
+	return ptabs(tabs+1) + "kafka_handler = KafkaEventHandler('localhost:9092','event_topic', 'feedback_topic','dejavu_group')\n"
+
+}
+
+func compileKafka() string {
+
+	if ! Kafka {
+		return ""
+	}
+	
+	if code, err := ioutil.ReadFile("internals/templates/kafka.template"); err == nil {
+		return string(code) + "\n"
+	} else {
+		fmt.Println("Read Error")
+		os.Exit(1)
+		return ""
+
+	} 
 }
 
 func (n StatementNode) compile() string {
-	tabs += 1
+	tabs += 2
 	expr := n.Rval.compile()
 	output := ptabs(tabs) + n.Lval.compile() + " = " + expr
-	tabs -= 1
+	tabs -= 2
 	return output
 }
 
@@ -426,11 +471,13 @@ func prefix() string {
 	return pr
 }
 
-func Start(code string, filename string) {
+func Start(code string, filename string, kafka bool) {
 
 	createSymbolTable()
 
-	fmt.Println("Compiling ...\n")
+	Kafka = kafka
+	
+	fmt.Println("Compiling ...")
 	yyParse(NewLexer(strings.NewReader(code)))
 	fmt.Println(Root.compile())
 
@@ -439,5 +486,5 @@ func Start(code string, filename string) {
 		fmt.Println("Error:", err)
 		return
 	}
-	fmt.Println("Success!\n")
+	fmt.Println("Success!")
 }

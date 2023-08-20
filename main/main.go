@@ -6,6 +6,7 @@ import (
 	"mnemosyne/internals"
 	"os"
 	"strconv"
+	"flag"
 )
 
 const VERSION = 1
@@ -19,9 +20,14 @@ func main() {
 		return
 	}
 
-	if code, err := ioutil.ReadFile(os.Args[1]); err == nil {
-		filename := os.Args[1]
-		internals.Start(string(code), filename)
+	kafkaFlag := flag.Bool("kafka", false, "Enable Kafka integration")
+	filename := flag.String("file", "", "Preprocessing file")
+
+	flag.Parse()
+	fmt.Println(*kafkaFlag)
+	if code, err := ioutil.ReadFile(*filename); err == nil {
+		
+		internals.Start(string(code), *filename, *kafkaFlag)
 	} else {
 		fmt.Println("Cannot read the input file: ", err)
 	}

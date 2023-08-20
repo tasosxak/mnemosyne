@@ -1,0 +1,48 @@
+class KafkaEventHandler:
+    def __init__(self, i_bootstrap_servers, i_out_topic, i_in_topic, i_group_id):
+        self._m_bootstrap_servers = i_bootstrap_servers
+        self._m_out_topic = i_out_topic
+        self._m_in_topic = i_in_topic
+        self._m_producer = self.__initialize_producer()
+        self._m_consumer = self.__initialize_consumer(i_group_id)
+
+    def __initialize_producer(self):
+        return KafkaProducer(bootstrap_servers=self._m_bootstrap_servers, linger_ms=10)
+
+    def __initialize_consumer(self, group_id):
+        # Create a Kafka consumer
+        consumer = KafkaConsumer(
+            bootstrap_servers=self._m_bootstrap_servers,
+            group_id=group_id,
+            auto_offset_reset='latest'
+        )
+
+        # Subscribe to the incoming topic
+        consumer.subscribe(topics=[self._m_in_topic])
+
+        return consumer
+
+    def send_event(self, event: str):
+        # Publish a message to the output topic
+        self._m_producer.send(self._m_out_topic, value=event.encode()).add_callback(
+            lambda r: print(f'Event ({event}) published successfully!')).add_errback(
+            lambda e: print(f'Error publishing event: {str(e)}'))
+
+        # Flush the producer to ensure the message is sent
+        self._m_producer.flush()
+
+    def receive_feedback(self):
+        # Continuously consume messages from the input topic
+        for message in self._m_consumer:
+            print(f'Received feedback message: {message.value.decode()}')
+            return
+
+    def producer_terminate(self):
+        self._m_producer.close()
+
+    def consumer_terminate(self):
+        self._m_consumer.close()
+
+    def shutdown(self):
+        self.producer_terminate()
+        self.consumer_terminate()

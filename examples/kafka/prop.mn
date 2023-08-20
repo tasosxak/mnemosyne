@@ -1,0 +1,16 @@
+event open:
+input int file;
+output int id;
+id <- file;
+end
+event close:
+input int file;
+output int id;
+id <- file;
+end
+event write:
+input int file, int user;
+output int fileId, int userId;
+fileId <- file;
+userId <- user;
+end

@@ -110,11 +110,16 @@ end
 
 ### Run
 ```sh
-./mnemosyne examples/default/test.mn
+./mnemosyne -file examples/default/test.mn
 ```
 
 The tool generates a .py file, you can execute it running the command below:
 
 ```sh
 python3 examples/default/test.mn.py
+```
+
+You can enable Kafka integration using the flag `--kafka`:
+```sh
+./mnemosyne -file examples/kafka/prop.mn --kafka 
 ```
