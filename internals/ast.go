@@ -181,7 +181,7 @@ func compileOutEvents(outEvent string) string {
 
 	if Kafka == true {
 		out += ptabs(tabs+2) + "kafka_handler.send_event(" + outEvent + ")\n"
-		out += ptabs(tabs+2) + "kafka_handler.receive_feedback()\n"
+		//out += ptabs(tabs+2) + "kafka_handler.receive_feedback()\n"
 	} else {
 		out += ptabs(tabs+2) + "print(" + outEvent + ")\n"
 	}

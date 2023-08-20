@@ -76,7 +76,6 @@ if __name__ == '__main__':
 			PAST_event_0file = event_0file
 			PAST_event_0id = event_0id
 			kafka_handler.send_event('open' + ',' + str(event_0id))
-			#kafka_handler.receive_feedback()
 
 
 		if inp[0] == 'close' : 
@@ -85,7 +84,6 @@ if __name__ == '__main__':
 			PAST_event_1file = event_1file
 			PAST_event_1id = event_1id
 			kafka_handler.send_event('close' + ',' + str(event_1id))
-			#kafka_handler.receive_feedback()
 
 
 		if inp[0] == 'write' : 
@@ -98,5 +96,4 @@ if __name__ == '__main__':
 			PAST_event_2fileId = event_2fileId
 			PAST_event_2userId = event_2userId
 			kafka_handler.send_event('write' + ',' + str(event_2fileId) + ',' + str(event_2userId))
-			kafka_handler.receive_feedback()
 
