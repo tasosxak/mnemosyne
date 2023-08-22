@@ -1,3 +1,5 @@
+from kafka import KafkaProducer, KafkaConsumer
+
 class KafkaEventHandler:
     def __init__(self, i_bootstrap_servers, i_out_topic, i_in_topic, i_group_id):
         self._m_bootstrap_servers = i_bootstrap_servers

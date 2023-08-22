@@ -5,7 +5,8 @@
 
 /,/ { return COMMA }
 /;/ {return SC}
-/:/ {return DOTS}
+/do/ {return DO}
+/initiate/ {return INITIATE}
 /\(/ { return LPAR }
 /\)/ { return RPAR }
 /\[/ { return LBR }
@@ -13,6 +14,7 @@
 /\]/ { return RBR }
 />=/ { return GE }
 />/ { return G}
+/send/ {return SEND}
 /<>/ {return NEQ}
 /=/ { return EQ}
 /#/ {return DIESI}
@@ -26,7 +28,7 @@
 /\*/ { return TIMES}
 /false/ {return FALSE}
 /true/ {return TRUE}
-/event/ {return EVENT}
+/on/ {return ON}
 /end/ {return END}
 /and/ {return AND}
 /or/ {return OR}

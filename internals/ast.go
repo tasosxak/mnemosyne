@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var Kafka bool = false
@@ -47,18 +47,47 @@ type EventNode struct {
 	Inputs     Node
 	Outputs    Node
 	Defs       Node
+	SendStmt   Node
 }
 
 type ProgramNode struct {
-	Events Node
+	GlobalVars Node
+	Events     Node
 }
 
 type OutputNode struct {
 	VarList Node
 }
 
+type OutVarListNode struct {
+	OutVars Node
+	OutVar  Node
+}
+
+type OutVarNode struct {
+	Var Node
+}
+
+type GlobalDefNode struct {
+	VarDecl Node
+	Value Node
+}
+
+type EmptyGlobalDefNode struct {
+}
+
+type GlobalDefListNode struct {
+	GlobalDefinitions Node
+	GlobalDefinition  Node
+}
+
 type InputNode struct {
 	VarList Node
+}
+
+type SendNode struct {
+	Name    string
+	OutVars Node
 }
 
 type StatementNode struct {
@@ -73,7 +102,8 @@ type StatementListNode struct {
 
 type VarDeclNode struct {
 	Type Typos
-	name Node
+	IDVar Node
+	Value Node
 }
 
 type VarDecListNode struct {
@@ -152,25 +182,37 @@ func (n EventNode) compile() string {
 	tabs += 1
 	var mapInputs string
 	var alterPastVars string
-	outStreamEvent := "'" + n.Name + "'"
+	regPattern := n.Name
+	//outStreamEvent := "'" + n.Name + "'"
 
-	for i, symbol := range inputDefs[n.CurIndex] {
-		mapInputs += ptabs(tabs+2) + symbol.compile() + " = " + strType(symbol.Type) + "(int(inp[" + strconv.Itoa(i+1) + "])) \n"
+	for i, symbol := range inputDefs[n.CurIndex-1] {
+		mapInputs += ptabs(tabs+2) + symbol.compile() + " = " + strType(symbol.Type) + "(int(list_inp[" + strconv.Itoa(i+1) + "])) \n"
+		regPattern += ","
+
+		switch symbol.Type {
+		case Integer:
+			regPattern += "\\d+"
+		case Boolean:
+			regPattern += "\\d+"
+		}
+
 	}
 
-	for _, symbol := range inputDefs[n.CurIndex] {
+	regPattern += "$"
+
+	for _, symbol := range inputDefs[n.CurIndex-1] {
 		alterPastVars += ptabs(tabs+2) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
 	}
 
-	for _, symbol := range outputDefs[n.CurIndex] {
+	for _, symbol := range outputDefs[n.CurIndex-1] {
 		alterPastVars += ptabs(tabs+2) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
 	}
 
-	for _, symbol := range outputDefs[n.CurIndex] {
+	/*for _, symbol := range outputDefs[n.CurIndex] {
 		outStreamEvent += " + ',' + str(" + symbol.compile() + ")"
-	}
+	}*/
 
-	output := ptabs(tabs+1) + "if inp[0] == '" + n.Name + "' : " + "\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars  + compileOutEvents(outStreamEvent) +  "\n"
+	output := ptabs(tabs+1) + "if re.match(r'" + regPattern + "'," + "inp" + ") : " + "\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + n.SendStmt.compile() + "\n"
 	tabs -= 1
 	return output
 }
@@ -195,6 +237,12 @@ func (n EmptyProgramNode) compile() string {
 
 func (n ProgramNode) compile() string {
 	var bufferDecls string
+
+	for _, globalSymbol := range globalDefs {
+		bufferDecls += globalSymbol.compile() + "\n"
+		bufferDecls += "PAST_" + globalSymbol.VarDecl.compile() + " = None\n"
+	}
+
 	for _, eventSymbols := range inputDefs {
 		for _, symbols := range eventSymbols {
 			bufferDecls += "PAST_" + symbols.compile() + " = None" + "\n"
@@ -209,7 +257,7 @@ func (n ProgramNode) compile() string {
 
 	}
 
-	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" +  compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "inp = input()\n" + ptabs(tabs+2) + "inp = inp.split(',') \n" + n.Events.compile()
+	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" + compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "inp = input()\n" + ptabs(tabs+2) + "list_inp = inp.split(',') \n" + n.Events.compile()
 
 }
 
@@ -218,12 +266,12 @@ func compileOperators() string {
 }
 
 func compileImportStatements() string {
-	return "from kafka import KafkaProducer, KafkaConsumer\n\n"
+	return "import re\n\n"
 }
 
 func compileKafkaInstance() string {
 
-	if ! Kafka {
+	if !Kafka {
 		return ""
 	}
 
@@ -233,10 +281,10 @@ func compileKafkaInstance() string {
 
 func compileKafka() string {
 
-	if ! Kafka {
+	if !Kafka {
 		return ""
 	}
-	
+
 	if code, err := ioutil.ReadFile("internals/templates/kafka.template"); err == nil {
 		return string(code) + "\n"
 	} else {
@@ -244,7 +292,7 @@ func compileKafka() string {
 		os.Exit(1)
 		return ""
 
-	} 
+	}
 }
 
 func (n StatementNode) compile() string {
@@ -259,6 +307,18 @@ func (n InputNode) compile() string {
 	return n.VarList.compile()
 }
 
+func (n SendNode) compile() string {
+	return compileOutEvents("'" + n.Name + "'" + " + " + n.OutVars.compile())
+}
+
+func (n OutVarListNode) compile() string {
+	return n.OutVars.compile() + " + " + n.OutVar.compile()
+}
+
+func (n OutVarNode) compile() string {
+	return "',' + " + " str(" + n.Var.compile() + ")"
+}
+
 func (n StatementListNode) compile() string {
 
 	return n.Left.compile() + "\n" + n.Right.compile()
@@ -268,9 +328,28 @@ func (n OutputNode) compile() string {
 	return n.VarList.compile()
 }
 
+func (n EmptyGlobalDefNode) compile() string {
+	return ""
+}
+
+func (n GlobalDefListNode) compile() string {
+
+	return n.GlobalDefinitions.compile() + n.GlobalDefinition.compile()
+}
+
+func (n GlobalDefNode) compile() string {
+
+	return n.VarDecl.compile() + " = " + n.Value.compile()
+}
+
 func (n VarDeclNode) compile() string {
 
-	return n.name.compile() + ":" + strType(n.Type)
+	compiledValue := ""
+
+	if n.Value != nil {
+		compiledValue = " = " + n.Value.compile()
+	}
+	return n.IDVar.compile() + ":" + strType(n.Type) + compiledValue
 }
 
 func (n VarDecListNode) compile() string {
@@ -302,7 +381,7 @@ func (n NumNode) getType() Typos {
 }
 
 func (n PastOpNode) compile() string {
-	return  "ite(" + "PAST_" + n.Term.compile() + "!= None," + "PAST_" + n.Term.compile() + "," + n.Else.compile() + ")"
+	return "ite(" + "PAST_" + n.Term.compile() + "!= None," + "PAST_" + n.Term.compile() + "," + n.Else.compile() + ")"
 }
 
 func (n PastOpNode) getType() Typos {
@@ -355,8 +434,11 @@ func (n IteNode) compile() string {
 }
 
 func createSymbolTable() {
+
 	current_symbol_index += 1
+	
 	SymbolTable = append(SymbolTable, make(map[string]*IDNode))
+	//fmt.Println(SymbolTable)
 }
 
 func definedSymbol(id string) bool {
@@ -364,17 +446,29 @@ func definedSymbol(id string) bool {
 	m := SymbolTable[current_symbol_index]
 	_, exists := m[id]
 
+	if !exists {
+		_, exists = SymbolTable[0][id] // Global variable
+	}
+	//fmt.Println("definedSymbol")
 	return exists
 }
 
 func addSymbol(id string, n *IDNode) {
 
 	SymbolTable[current_symbol_index][id] = n
+	//fmt.Println(SymbolTable)
 }
 
 func getSymbol(id string) *IDNode {
 
-	return SymbolTable[current_symbol_index][id]
+	//fmt.Println("getSymbol")
+	symb , exists := SymbolTable[current_symbol_index][id]
+
+	if !exists {
+		symb  = SymbolTable[0][id]
+	}
+
+	return symb
 }
 
 func assertSameType(id string, n Node) {
@@ -396,7 +490,7 @@ func assertSameTypeNodes(n1 Node, n2 Node) {
 		switch tn2 := n2.(type) {
 		case Typable:
 			if tn1.getType() != tn2.getType() {
-				compilerError("Type Error: If-then-else expression should return the same type in both cases. I got" + strType(tn1.getType()) + " and " + strType(tn2.getType()))
+				compilerError("Type Error: Lval and Rval expressions should be in the same type. I got " + strType(tn1.getType()) + " and " + strType(tn2.getType()))
 			}
 		}
 	}
@@ -467,6 +561,11 @@ func assertType(id string, t Typos) {
 }
 
 func prefix() string {
+
+	if GLOBAL == true {
+		return "global_"
+	}
+
 	pr := "event_" + strconv.Itoa(current_symbol_index)
 	return pr
 }
@@ -476,12 +575,12 @@ func Start(code string, filename string, kafka bool) {
 	createSymbolTable()
 
 	Kafka = kafka
-	
+
 	fmt.Println("Compiling ...")
 	yyParse(NewLexer(strings.NewReader(code)))
 	fmt.Println(Root.compile())
 
-	err := ioutil.WriteFile( filename + ".py", []byte(Root.compile()), 0644)
+	err := ioutil.WriteFile(filename+".py", []byte(Root.compile()), 0644)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

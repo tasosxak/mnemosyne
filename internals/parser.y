@@ -8,6 +8,9 @@ var current_symbol_index = -1;
 var predefinedIDs = []*IDNode{}
 var inputDefs = [][]*IDNode{}
 var outputDefs = [][]*IDNode{}
+var globalDefs = []*GlobalDefNode{}
+
+var GLOBAL bool = true 
 
 %}
 
@@ -20,19 +23,25 @@ Node
 
 }
 
-%token  INPUT ID END OUTPUT EVENT ASSIGN COMMA NUM DOTS LPAR RPAR PIPE LBR RBR BOOL INT EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE
+%token  INPUT ID END OUTPUT ON ASSIGN COMMA NUM DO SEND LPAR RPAR PIPE LBR RBR BOOL INT EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE INITIATE
 %token <name> ID
 %token <n> NUM
-%type <Node> identifier itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm
+%type <Node> identifier itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm sendstatement outputvars outvar globaldefs globaldeflist globaldef globalvalue
 %type <IDNode> 
 %type <tt> type
 %%
 
 program: {
-    $$ = EmptyProgramNode{} 
+
+    $$ = EmptyProgramNode{};
+    Root = $$;
 }
-| eventlist {
-    $$ = ProgramNode{$1};
+| globaldefs eventlist {
+
+    $$ = ProgramNode{
+        GlobalVars: $1,
+        Events: $2,
+    };
     Root = $$;
 }
 ;
@@ -45,23 +54,82 @@ eventlist: eventlist event {
 }
 ;
 
-event: EVENT ID DOTS inputdecl outputdecl streamdecl END {
+globaldefs: INITIATE globaldeflist END {
+    
+    createSymbolTable();
+    GLOBAL = false;
+
+    $$ = $2;
+}
+| {
+     
+    createSymbolTable();
+    GLOBAL = false;
+
+    $$ = EmptyGlobalDefNode{};
+}
+;
+
+globaldeflist: globaldeflist globaldef {
+
+    $$ = GlobalDefListNode{
+        GlobalDefinitions: $1,
+        GlobalDefinition: $2,
+    }
+}
+| globaldef {
+
+    $$ = $1;
+}
+;
+
+globaldef: vardecl ASSIGN globalvalue SC {
+
+     assertSameTypeNodes($1.(VarDeclNode).IDVar, $3)
+
+     p := GlobalDefNode{
+        VarDecl: $1,
+        Value: $3,
+    }
+
+    globalDefs = append(globalDefs, &p)
+
+     $$ = p
+}
+;
+
+globalvalue: FALSE {
+    $$ = BooleanNode{"False"};
+}
+|  TRUE {
+    $$ = BooleanNode{"True"};
+}
+| NUM {
+     $$ = NumNode{$1};
+}
+;
+
+event: ON ID LPAR inputdecl RPAR DO outputdecl streamdecl sendstatement END {
 
     $$ = EventNode{ 
             Name: $2, 
             CurIndex: current_symbol_index,
-            InputsLen: len(inputDefs[current_symbol_index]),
-            OutputsLen: len(outputDefs[current_symbol_index]),
+            InputsLen: len(inputDefs[current_symbol_index-1]),
+            OutputsLen: len(outputDefs[current_symbol_index-1]),
             Inputs: $4, 
-            Outputs: $5, 
-            Defs: $6,
+            Outputs: $7, 
+            Defs: $8,
+            SendStmt: $9,
             };
+
     createSymbolTable();
+   
 }
 ;
 
-inputdecl: INPUT varlist SC {
+inputdecl: varlist {
 
+    
     for _, idNode :=  range predefinedIDs {
         idNode.tstream = InputStream
     }
@@ -72,7 +140,7 @@ inputdecl: INPUT varlist SC {
  
     predefinedIDs = predefinedIDs[:0]
 
-    $$ = InputNode{$2};
+    $$ = InputNode{$1};
 }
 ;
 
@@ -119,13 +187,41 @@ statement: ID ASSIGN expr SC {
         compilerError("Variable " + $1 + " is not output stream.")
   }
 
-  
-
   $$ = StatementNode {
         Lval: getSymbol($1),
         Rval: $3,
   }
 
+}
+;
+
+sendstatement: SEND ID LPAR outputvars RPAR SC {
+    $$ = SendNode {
+        Name: $2,
+        OutVars: $4,
+    }
+}
+;
+
+outputvars: outputvars COMMA outvar {
+
+    $$ = OutVarListNode {
+        OutVars: $1,
+        OutVar: $3,
+    }
+}
+| outvar {
+    $$ = $1;
+}
+;
+
+outvar: identifier {
+
+
+    $$ = OutVarNode {
+        Var: $1,
+    }
+        
 }
 ;
 
@@ -269,8 +365,6 @@ unary: MINUS unary {
 }
 ;
 
-
-
 itexpr: ITE LPAR logexpr COMMA arithmexpr COMMA arithmexpr RPAR {
 
        assertSameTypeNodes($5, $7)
@@ -314,17 +408,26 @@ term: identifier {
 vardecl: type ID {
     
         if definedSymbol($2) {
-        compilerError("Syntax Error: The variable already exists.");
+            compilerError("Syntax Error: The variable already exists.");
         }
 
         pr := prefix()
         p := IDNode{ prefix: pr, name: $2, Type: $1};
-        predefinedIDs = append(predefinedIDs, &p);
-     
-        n := VarDeclNode{$1, &p};
+
+        if GLOBAL == false {
+
+            predefinedIDs = append(predefinedIDs, &p);
+        }
+        
+        n := VarDeclNode{ 
+            Type: $1, 
+            IDVar: &p, 
+            Value: nil,
+        };
+
         addSymbol($2, &p);
 
-        $$= n
+        $$ = n
 }
 ;
 type:  BOOL { 

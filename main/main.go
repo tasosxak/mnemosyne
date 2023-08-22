@@ -24,7 +24,9 @@ func main() {
 	filename := flag.String("file", "", "Preprocessing file")
 
 	flag.Parse()
-	fmt.Println(*kafkaFlag)
+	
+	fmt.Println("KAFKA: " + strconv.FormatBool(*kafkaFlag))
+
 	if code, err := ioutil.ReadFile(*filename); err == nil {
 		
 		internals.Start(string(code), *filename, *kafkaFlag)
