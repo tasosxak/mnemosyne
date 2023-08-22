@@ -1,21 +1,27 @@
+import re
+
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
-PAST_event_0bis = None
-PAST_event_0bisTarget = None
-PAST_event_0diffFromTarget = None
-event_0diffFromTarget = None
-PAST_event_0stepChange = None
-event_0stepChange = None
-while True:
-	inp = input()
-	inp = inp.split(',') 
-	if inp[0] == 'instance' : 
-		event_0bis = int(int(inp[1])) 
-		event_0bisTarget = int(int(inp[2])) 
-		event_0diffFromTarget = abs(event_0bis - event_0bisTarget)
-		event_0stepChange = ite(event_0bisTarget != ite(PAST_event_0bisTarget!= None,PAST_event_0bisTarget,event_0bisTarget),  True ,  False )
-		PAST_event_0bis = event_0bis
-		PAST_event_0bisTarget = event_0bisTarget
-		PAST_event_0diffFromTarget = event_0diffFromTarget
-		PAST_event_0stepChange = event_0stepChange
-		print('instance' + ',' + str(event_0diffFromTarget) + ',' + str(event_0stepChange)) 
+
+PAST_event_1bis = None
+PAST_event_1bisTarget = None
+PAST_event_1diffFromTarget = None
+event_1diffFromTarget = None
+PAST_event_1stepChange = None
+event_1stepChange = None
+
+if __name__ == '__main__':
+	while True:
+		inp = input()
+		list_inp = inp.split(',') 
+		if re.match(r'instance,\d+,\d+$',inp) : 
+			event_1bis = int(int(list_inp[1])) 
+			event_1bisTarget = int(int(list_inp[2])) 
+			event_1diffFromTarget = abs(event_1bis - event_1bisTarget)
+			event_1stepChange = ite(event_1bisTarget != ite(PAST_event_1bisTarget!= None,PAST_event_1bisTarget,event_1bisTarget),  True ,  False )
+			PAST_event_1bis = event_1bis
+			PAST_event_1bisTarget = event_1bisTarget
+			PAST_event_1diffFromTarget = event_1diffFromTarget
+			PAST_event_1stepChange = event_1stepChange
+			print('instance' + ',' +  str(event_1diffFromTarget) + ',' +  str(event_1stepChange))
+

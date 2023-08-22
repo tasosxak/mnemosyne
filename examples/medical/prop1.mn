@@ -1,6 +1,6 @@
-event instance:
-input int bis, int bisTarget;
-output int diffFromTarget, bool stepChange;
-diffFromTarget <-  |bis - bisTarget|;
-stepChange <- ite(bisTarget <> @bisTarget[bisTarget], true, false);
+on instance(int bis, int bisTarget) do
+    output int diffFromTarget, bool stepChange;
+    diffFromTarget <-  |bis - bisTarget|;
+    stepChange <- ite(bisTarget <> @bisTarget[bisTarget], true, false);
+    send instance(diffFromTarget, stepChange);
 end

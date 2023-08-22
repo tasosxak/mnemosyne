@@ -1,16 +1,18 @@
-event open:
-input int file;
-output int id;
-id <- file;
+on open(int file) do
+    output int id;
+    id <- file;
+    send open(id);
 end
-event close:
-input int file;
-output int id;
-id <- file;
+
+on close(int file) do
+    output int id;
+    id <- file;
+    send close(id);
 end
-event write:
-input int file, int user;
-output int fileId, int userId;
-fileId <- file;
-userId <- user;
+
+on write(int file, int user) do
+    output int fileId, int userId;
+    fileId <- file;
+    userId <- user;
+    send userId(fileId, userId);
 end

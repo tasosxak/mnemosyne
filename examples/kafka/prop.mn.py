@@ -1,3 +1,5 @@
+import re
+
 from kafka import KafkaProducer, KafkaConsumer
 
 class KafkaEventHandler:
@@ -52,48 +54,48 @@ class KafkaEventHandler:
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
-PAST_event_0file = None
 PAST_event_1file = None
 PAST_event_2file = None
-PAST_event_2user = None
-PAST_event_0id = None
-event_0id = None
+PAST_event_3file = None
+PAST_event_3user = None
 PAST_event_1id = None
 event_1id = None
-PAST_event_2fileId = None
-event_2fileId = None
-PAST_event_2userId = None
-event_2userId = None
+PAST_event_2id = None
+event_2id = None
+PAST_event_3fileId = None
+event_3fileId = None
+PAST_event_3userId = None
+event_3userId = None
 
 if __name__ == '__main__':
 	kafka_handler = KafkaEventHandler('localhost:9092','event_topic', 'feedback_topic','dejavu_group')
 	while True:
 		inp = input()
-		inp = inp.split(',') 
-		if inp[0] == 'open' : 
-			event_0file = int(int(inp[1])) 
-			event_0id = event_0file
-			PAST_event_0file = event_0file
-			PAST_event_0id = event_0id
-			kafka_handler.send_event('open' + ',' + str(event_0id))
-
-
-		if inp[0] == 'close' : 
-			event_1file = int(int(inp[1])) 
+		list_inp = inp.split(',') 
+		if re.match(r'open,\d+$',inp) : 
+			event_1file = int(int(list_inp[1])) 
 			event_1id = event_1file
 			PAST_event_1file = event_1file
 			PAST_event_1id = event_1id
-			kafka_handler.send_event('close' + ',' + str(event_1id))
+			kafka_handler.send_event('open' + ',' +  str(event_1id))
 
 
-		if inp[0] == 'write' : 
-			event_2file = int(int(inp[1])) 
-			event_2user = int(int(inp[2])) 
-			event_2fileId = event_2file
-			event_2userId = event_2user
+		if re.match(r'close,\d+$',inp) : 
+			event_2file = int(int(list_inp[1])) 
+			event_2id = event_2file
 			PAST_event_2file = event_2file
-			PAST_event_2user = event_2user
-			PAST_event_2fileId = event_2fileId
-			PAST_event_2userId = event_2userId
-			kafka_handler.send_event('write' + ',' + str(event_2fileId) + ',' + str(event_2userId))
+			PAST_event_2id = event_2id
+			kafka_handler.send_event('close' + ',' +  str(event_2id))
+
+
+		if re.match(r'write,\d+,\d+$',inp) : 
+			event_3file = int(int(list_inp[1])) 
+			event_3user = int(int(list_inp[2])) 
+			event_3fileId = event_3file
+			event_3userId = event_3user
+			PAST_event_3file = event_3file
+			PAST_event_3user = event_3user
+			PAST_event_3fileId = event_3fileId
+			PAST_event_3userId = event_3userId
+			kafka_handler.send_event('userId' + ',' +  str(event_3fileId) + ',' +  str(event_3userId))
 
