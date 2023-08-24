@@ -70,29 +70,32 @@ event_3userId = None
 if __name__ == '__main__':
 	kafka_handler = KafkaEventHandler('localhost:9092','event_topic', 'feedback_topic','dejavu_group')
 	while True:
-		inp = input()
-		list_inp = inp.split(',') 
-		if re.match(r'open,\d+$',inp) : 
-			event_1file = int(int(list_inp[1])) 
-			event_1id = event_1file
+		try:
+			inp = input()
+			list_inp = inp.split(',')
+		except EOFError:
+			exit()
+		if re.match(r'open,\w+$',inp) : 
+			event_1file = str(list_inp[1])
+			event_1id = str(event_1file)
 			PAST_event_1file = event_1file
 			PAST_event_1id = event_1id
 			kafka_handler.send_event('open' + ',' +  str(event_1id))
 
 
-		if re.match(r'close,\d+$',inp) : 
-			event_2file = int(int(list_inp[1])) 
-			event_2id = event_2file
+		if re.match(r'close,\w+$',inp) : 
+			event_2file = str(list_inp[1])
+			event_2id = str(event_2file)
 			PAST_event_2file = event_2file
 			PAST_event_2id = event_2id
 			kafka_handler.send_event('close' + ',' +  str(event_2id))
 
 
-		if re.match(r'write,\d+,\d+$',inp) : 
-			event_3file = int(int(list_inp[1])) 
-			event_3user = int(int(list_inp[2])) 
-			event_3fileId = event_3file
-			event_3userId = event_3user
+		if re.match(r'write,\w+,\w+$',inp) : 
+			event_3file = str(list_inp[1])
+			event_3user = str(list_inp[2])
+			event_3fileId = str(event_3file)
+			event_3userId = str(event_3user)
 			PAST_event_3file = event_3file
 			PAST_event_3user = event_3user
 			PAST_event_3fileId = event_3fileId

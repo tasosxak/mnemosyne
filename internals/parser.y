@@ -16,6 +16,7 @@ var GLOBAL bool = true
 
 %union {
 n int
+realn float64
 name string
 tt Typos
 *IDNode
@@ -23,9 +24,10 @@ Node
 
 }
 
-%token  INPUT ID END OUTPUT ON ASSIGN COMMA NUM DO SEND LPAR RPAR PIPE LBR RBR BOOL INT EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE INITIATE
-%token <name> ID
+%token  INPUT ID END OUTPUT ON ASSIGN COMMA NUM LITERAL DO SEND LPAR RPAR PIPE LBR RBR BOOL INT STR REAL EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE INITIATE
+%token <name> ID LITERAL
 %token <n> NUM
+%token <realn> REALNUM
 %type <Node> identifier itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm sendstatement outputvars outvar globaldefs globaldeflist globaldef globalvalue
 %type <IDNode> 
 %type <tt> type
@@ -107,6 +109,9 @@ globalvalue: FALSE {
 | NUM {
      $$ = NumNode{$1};
 }
+| REALNUM {
+    $$ = RealNumNode{$1};
+}
 ;
 
 event: ON ID LPAR inputdecl RPAR DO outputdecl streamdecl sendstatement END {
@@ -183,8 +188,9 @@ statement: ID ASSIGN expr SC {
   assertDefined($1)
   assertSameType($1, $3)
 
-  if ! ( getSymbol($1).tstream == OutputStream) {
-        compilerError("Variable " + $1 + " is not output stream.")
+  if (!(getSymbol($1).tstream == OutputStream) && !definedGlobalSymbol($1) ) {
+
+        compilerError("Variable " + $1 + " is not output stream or global.")
   }
 
   $$ = StatementNode {
@@ -319,10 +325,6 @@ mathexpr:  mathexpr ADD addpart {
 | mathexpr MINUS addpart {
     $$ = BinaryOpNode{ $1, "-", $3, Integer}
 }
-| PIPE mathexpr PIPE {
-    $$ = AbsOpNode {$2, Integer}
-}
-;
 | addpart {
     $$ = $1;
 }
@@ -400,8 +402,17 @@ term: identifier {
 | LPAR mathexpr RPAR {
     $$ = ParenthesisOpNode{$2, Integer};
 }
+| PIPE mathexpr PIPE {
+    $$ = AbsOpNode {$2, Integer}
+}
 | NUM {
     $$ = NumNode{$1}
+}
+| LITERAL {
+    $$ = StrNode{$1}
+}
+| REALNUM {
+    $$ = RealNumNode{$1}
 }
 ;
 
@@ -437,6 +448,14 @@ type:  BOOL {
 | INT   { 
      var t Typos = Integer
      $$ = t;
+}
+| STR {
+    var t Typos = String 
+    $$ = t;
+}
+| REAL {
+    var t Typos = Real 
+    $$ = t;
 }
 ;
 

@@ -14,6 +14,8 @@ var tabs int = 0
 const (
 	Integer = iota + 1
 	Boolean
+	String
+	Real
 )
 
 const (
@@ -138,7 +140,15 @@ type NumNode struct {
 	Value int
 }
 
+type RealNumNode struct {
+	Value float64
+}
+
 type BooleanNode struct {
+	Value string
+}
+
+type StrNode struct {
 	Value string
 }
 
@@ -178,6 +188,24 @@ func (n EventListNode) compile() string {
 	return n.Events.compile() + "\n" + n.Event.compile()
 }
 
+func compileCastInput(t Typos, index int) string {
+
+	var outputCastInput string
+
+	switch t {
+		case Integer:
+			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+		case Boolean:
+			outputCastInput = strType(t) + "(int(list_inp[" + strconv.Itoa(index) + "]))\n"
+		case String:
+			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+		case Real:
+			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+	}
+
+	return outputCastInput
+}
+
 func (n EventNode) compile() string {
 	tabs += 1
 	var mapInputs string
@@ -186,14 +214,18 @@ func (n EventNode) compile() string {
 	//outStreamEvent := "'" + n.Name + "'"
 
 	for i, symbol := range inputDefs[n.CurIndex-1] {
-		mapInputs += ptabs(tabs+2) + symbol.compile() + " = " + strType(symbol.Type) + "(int(list_inp[" + strconv.Itoa(i+1) + "])) \n"
+		mapInputs += ptabs(tabs+2) + symbol.compile() + " = " + compileCastInput(symbol.Type, i+1)
 		regPattern += ","
 
 		switch symbol.Type {
 		case Integer:
-			regPattern += "\\d+"
+			regPattern += "-?\\d+"
 		case Boolean:
 			regPattern += "\\d+"
+		case String:
+			regPattern += "\\w+"
+		case Real:
+			regPattern += "-?\\d+(\\.\\d*)?"
 		}
 
 	}
@@ -207,6 +239,10 @@ func (n EventNode) compile() string {
 	for _, symbol := range outputDefs[n.CurIndex-1] {
 		alterPastVars += ptabs(tabs+2) + "PAST_" + symbol.compile() + " = " + symbol.compile() + "\n"
 	}
+
+	/*for _, globalSymbol := range globalDefs {
+		alterPastVars += ptabs(tabs+2) + "PAST_" + globalSymbol.VarDecl.compile() + " = " +  globalSymbol.VarDecl.compile() + "\n"
+	}*/
 
 	/*for _, symbol := range outputDefs[n.CurIndex] {
 		outStreamEvent += " + ',' + str(" + symbol.compile() + ")"
@@ -257,7 +293,7 @@ func (n ProgramNode) compile() string {
 
 	}
 
-	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" + compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "inp = input()\n" + ptabs(tabs+2) + "list_inp = inp.split(',') \n" + n.Events.compile()
+	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" + compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "try:\n" + ptabs(tabs+3) + "inp = input()\n" + ptabs(tabs+3) + "list_inp = inp.split(',')\n" + ptabs(tabs+2) + "except EOFError:\n" + ptabs(tabs+3) + "exit()\n" + n.Events.compile()
 
 }
 
@@ -296,9 +332,20 @@ func compileKafka() string {
 }
 
 func (n StatementNode) compile() string {
+
 	tabs += 2
 	expr := n.Rval.compile()
-	output := ptabs(tabs) + n.Lval.compile() + " = " + expr
+	var output string
+
+	if  definedGlobalSymbol(n.Lval.(*IDNode).name) == true {
+
+		output = ptabs(tabs) + "PAST_" + n.Lval.compile() + " = " + n.Lval.compile() + "\n"
+		output += ptabs(tabs) + n.Lval.compile() + " = " + strType(n.Lval.(*IDNode).Type) + "(" + expr + ")"
+
+	} else {
+		output += ptabs(tabs) + n.Lval.compile() + " = " + strType(n.Lval.(*IDNode).Type) + "(" + expr + ")"
+	}
+	
 	tabs -= 2
 	return output
 }
@@ -347,9 +394,9 @@ func (n VarDeclNode) compile() string {
 	compiledValue := ""
 
 	if n.Value != nil {
-		compiledValue = " = " + n.Value.compile()
+		compiledValue = " = " +  strType(n.Type)  + "(" +  n.Value.compile() + ")"
 	}
-	return n.IDVar.compile() + ":" + strType(n.Type) + compiledValue
+	return n.IDVar.compile() + compiledValue 
 }
 
 func (n VarDecListNode) compile() string {
@@ -368,8 +415,24 @@ func (n BooleanNode) compile() string {
 	return " " + n.Value + " "
 }
 
+func (n StrNode) compile() string {
+	return " '" + n.Value + "' "
+}
+
 func (n BooleanNode) getType() Typos {
 	return Boolean
+}
+
+func (n StrNode) getType() Typos {
+	return String
+}
+
+func (n RealNumNode) compile() string {
+	return " " + strconv.FormatFloat( n.Value, 'g', 5, 64) + " "
+}
+
+func (n RealNumNode) getType() Typos {
+	return Real
 }
 
 func (n NumNode) compile() string {
@@ -453,6 +516,14 @@ func definedSymbol(id string) bool {
 	return exists
 }
 
+func definedGlobalSymbol(id string) bool {
+
+	m := SymbolTable[0]
+	_, exists := m[id]
+
+	return exists
+}
+
 func addSymbol(id string, n *IDNode) {
 
 	SymbolTable[current_symbol_index][id] = n
@@ -477,7 +548,7 @@ func assertSameType(id string, n Node) {
 
 	switch n := n.(type) {
 	case Typable:
-		if n.getType() != s.getType() {
+		if n.getType() != s.getType() && !( (n.getType() == Real && s.getType() == Integer) || (n.getType() == Integer && s.getType() == Real )) {
 			compilerError(id + " variable type is " + strType(s.getType()) + ", but the corresponding expression is " + strType(n.getType()))
 		}
 	}
@@ -489,7 +560,7 @@ func assertSameTypeNodes(n1 Node, n2 Node) {
 	case Typable:
 		switch tn2 := n2.(type) {
 		case Typable:
-			if tn1.getType() != tn2.getType() {
+			if (tn1.getType() != tn2.getType()) && !( (tn1.getType() == Real && tn2.getType() == Integer) || (tn1.getType() == Integer && tn2.getType() == Real )) {
 				compilerError("Type Error: Lval and Rval expressions should be in the same type. I got " + strType(tn1.getType()) + " and " + strType(tn2.getType()))
 			}
 		}
@@ -532,6 +603,7 @@ func assertDefined(id string) {
 	}
 }
 
+
 func strType(t Typos) string {
 
 	var stype string
@@ -539,10 +611,12 @@ func strType(t Typos) string {
 	switch t {
 	case Integer:
 		stype = "int"
-		break
 	case Boolean:
 		stype = "bool"
-		break
+	case String:
+		stype = "str"
+	case Real:
+		stype = "float"
 	}
 
 	return stype

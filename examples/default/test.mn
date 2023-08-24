@@ -10,3 +10,8 @@ on detect(bool objectDetected) do
     detected <- #@objectDetected[#objectDetected];
     send detect(speed, detected);
 end
+on example(string id) do 
+    output string newId;
+    newId <- id;
+    send newExample(newId);
+end

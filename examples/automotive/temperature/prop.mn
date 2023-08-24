@@ -1,0 +1,17 @@
+
+initiate
+    int Temp <- 0;
+end
+on StartMeasure(string Car, int temp) do
+    output string outCar;
+    outCar <- Car;
+    Temp <- temp;
+    send test(outCar);
+end
+on EndMeasure(string Car, int temp) do
+    output bool Warming, string outCar;
+    Temp <- temp;
+    Warming <- (Temp - @Temp[Temp]) > 5;
+    outCar <- Car;
+    send increase(outCar, Warming);
+end

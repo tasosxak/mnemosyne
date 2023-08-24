@@ -1,0 +1,34 @@
+initiate
+    real Distance <- -1;
+end
+
+on startMeasure(string carA, string carB, int xA, int yA, int xB, int yB) do
+    output string CarA, string CarB;
+    Distance <- (|xA-xB|^2 + |yA-yB|^2) ^ 0.5;
+    CarA <- carA;
+    CarB <- carB;
+    send start(CarA,carB);
+end
+
+on location(string carA, string carB, int xA, int yA, int xB, int yB) do
+    output string CarA, string CarB, bool HighlyDecreasingDistance;
+    Distance <- (|xA-xB|^2 + |yA-yB|^2) ^ 0.5;
+    HighlyDecreasingDistance <- (Distance - @Distance[Distance]) < -5;
+    CarA <- carA;
+    CarB <- carB;
+    send distance(CarA, CarB, HighlyDecreasingDistance);
+end
+
+on startMonitoring(string carA, string carB) do
+    output string CarA, string CarB;
+    CarA <- carA;
+    CarB <- carB;
+    send startMonitoring(CarA, CarB);
+end
+
+on stopMonitoring(string carA, string carB) do
+    output string CarA, string CarB;
+    CarA <- carA;
+    CarB <- carB;
+    send stopMonitoring(CarA, CarB);
+end

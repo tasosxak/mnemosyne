@@ -1,17 +1,17 @@
-on open(int file) do
-    output int id;
+on open(string file) do
+    output string id;
     id <- file;
     send open(id);
 end
 
-on close(int file) do
-    output int id;
+on close(string file) do
+    output string id;
     id <- file;
     send close(id);
 end
 
-on write(int file, int user) do
-    output int fileId, int userId;
+on write(string file, string user) do
+    output string fileId, string userId;
     fileId <- file;
     userId <- user;
     send userId(fileId, userId);

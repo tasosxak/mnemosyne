@@ -37,10 +37,13 @@
 /ite/ {return ITE}
 /bool/ {return BOOL}
 /int/ {return INT}
+/string/ {return STR}
+/real/ {return REAL}
+/[-]?([0-9]*[.])[0-9]+/ { lval.realn, _ = strconv.ParseFloat(yylex.Text(),64); return REALNUM}
 /-[0-9]+/ { lval.n,_ = strconv.Atoi(yylex.Text()); return NUM }
 /[0-9]+/ { lval.n,_ = strconv.Atoi(yylex.Text()); return NUM }
-/[a-zA-Z][a-zA-Z0-9]*/ { lval.name = yylex.Text(); return ID}
-
+/[a-zA-Z][a-zA-Z0-9_]*/ { lval.name = yylex.Text(); return ID}
+/\"[a-zA-Z0-9_]*\"/ { lval.name = yylex.Text(); return LITERAL}
 /\n/ { }
 /./ {  }
 

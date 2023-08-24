@@ -1,0 +1,42 @@
+initiate
+    int SysErr <-0;
+    int X <- -1; 
+    int Y <- -1; 
+    int Z <- -1;
+    int EPO <- 10;
+    int EMAX <- 20;
+    bool Predicted <- false;
+end
+
+on entry(string ru) do
+    output string outRu;
+    outRu <- ru;
+    send entry(outRu);
+end
+
+on mk_prediction(string ru, int x, int y, int z) do
+    output string outRu;
+    X <- x;
+    Y <- y;
+    Z <- z;
+    Predicted <- true;
+    outRu <- ru;
+    send predicted(outRu);
+end
+
+on obstacle(string ru, int x, int y, int z) do
+    output bool error, int LErr, string outRu;
+    LErr <- ite(#Predicted, |x - X| + |y - Y| + |z - Z|, 0);
+    SysErr <- SysErr + LErr;
+    Predicted <- false;
+    error <- (LErr > EPO) or (SysErr > EMAX);
+    outRu <- ru;
+    send valid(outRu, error);
+end
+
+on exit(string ru, int lerr) do
+    output string outRu;
+    outRu <- ru;
+    SysErr <- SysErr - lerr;
+    send exit(ru);
+end
