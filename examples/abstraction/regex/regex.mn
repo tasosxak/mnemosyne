@@ -1,0 +1,6 @@
+channel string Trace <- "";
+
+on _() from stdin do
+    Trace <- Trace + _ ;
+    send _(Trace) to stdout when (not Trace ~ "(.*(pqp)p+$)+");
+end

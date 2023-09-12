@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -25,7 +24,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'car,-?\d+,-?\d+$',inp) : 
+		if re.match(r'car,-?\d+,-?\d+$',inp):
 			event_1speed = int(list_inp[1])
 			event_1speedLimit = int(list_inp[2])
 			event_1deltaSpeed = int(event_1speed - ite(PAST_event_1speed!= None,PAST_event_1speed,event_1speed))
@@ -37,7 +36,7 @@ if __name__ == '__main__':
 			print('car' + ',' +  str(event_1deltaSpeed) + ',' +  str(event_1underLimit))
 
 
-		if re.match(r'detect,\d+$',inp) : 
+		if re.match(r'detect,\d+$',inp):
 			event_2objectDetected = bool(int(list_inp[1]))
 			event_2speed = int(ite(event_2objectDetected and ite(PAST_event_2speed!= None,PAST_event_2speed, 10 ) <  5 ,  0 ,  5 ))
 			event_2detected = bool(ite(PAST_event_2objectDetected!= None,PAST_event_2objectDetected,event_2objectDetected))
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 			print('detect' + ',' +  str(event_2speed) + ',' +  str(event_2detected))
 
 
-		if re.match(r'example,\w+$',inp) : 
+		if re.match(r'example,\w+$',inp):
 			event_3id = str(list_inp[1])
 			event_3newId = str(event_3id)
 			PAST_event_3id = event_3id

@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -48,7 +47,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'entry,\w+$',inp) : 
+		if re.match(r'entry,\w+$',inp):
 			event_1ru = str(list_inp[1])
 			event_1outRu = str(event_1ru)
 			PAST_event_1ru = event_1ru
@@ -56,7 +55,7 @@ if __name__ == '__main__':
 			print('entry' + ',' +  str(event_1outRu))
 
 
-		if re.match(r'mk_prediction,\w+,-?\d+,-?\d+,-?\d+$',inp) : 
+		if re.match(r'mk_prediction,\w+,-?\d+,-?\d+,-?\d+$',inp):
 			event_2ru = str(list_inp[1])
 			event_2x = int(list_inp[2])
 			event_2y = int(list_inp[3])
@@ -78,7 +77,7 @@ if __name__ == '__main__':
 			print('predicted' + ',' +  str(event_2outRu))
 
 
-		if re.match(r'obstacle,\w+,-?\d+,-?\d+,-?\d+$',inp) : 
+		if re.match(r'obstacle,\w+,-?\d+,-?\d+,-?\d+$',inp):
 			event_3ru = str(list_inp[1])
 			event_3x = int(list_inp[2])
 			event_3y = int(list_inp[3])
@@ -100,7 +99,7 @@ if __name__ == '__main__':
 			print('valid' + ',' +  str(event_3outRu) + ',' +  str(event_3error))
 
 
-		if re.match(r'exit,\w+,-?\d+$',inp) : 
+		if re.match(r'exit,\w+,-?\d+$',inp):
 			event_4ru = str(list_inp[1])
 			event_4lerr = int(list_inp[2])
 			event_4outRu = str(event_4ru)

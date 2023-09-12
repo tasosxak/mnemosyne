@@ -1,17 +1,17 @@
 
-initiate
-    int Temp <- 0;
-end
-on StartMeasure(string Car, int temp) do
-    output string outCar;
+channel int Temp <- 0;
+
+on StartMeasure(string Car, int temp) from stdin do
+    out string outCar;
     outCar <- Car;
     Temp <- temp;
-    send test(outCar);
+    send test(outCar) to stdout;
 end
-on EndMeasure(string Car, int temp) do
-    output bool Warming, string outCar;
+
+on EndMeasure(string Car, int temp) from stdin do
+    out bool Warming, string outCar;
     Temp <- temp;
     Warming <- (Temp - @Temp[Temp]) > 5;
     outCar <- Car;
-    send increase(outCar, Warming);
+    send increase(outCar, Warming) to stdout;
 end

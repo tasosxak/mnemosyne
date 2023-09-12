@@ -1,19 +1,19 @@
-on set(string ac, int temp) do
-    output bool InBound, string Ac, int Temp;
+on set(string ac, int temp) from stdin do
+    out bool InBound, string Ac, int Temp;
     InBound <- temp >= 17 and temp <= 26;
     Ac <- ac;
     Temp <- temp;
-    send set(Ac,Temp,InBound);
+    send set(Ac,Temp,InBound) to stdout;
 end
 
-on turn_on(string ac) do
-    output string Ac;
+on turn_on(string ac) from stdin do
+    out string Ac;
     Ac <- ac;
-    send turn_on(Ac);
+    send turn_on(Ac) to stdout;
 end
 
-on turn_off(string ac) do
-    output string Ac;
+on turn_off(string ac) from stdin do
+    out string Ac;
     Ac <- ac;
-    send turn_off(Ac);
+    send turn_off(Ac) to stdout;
 end

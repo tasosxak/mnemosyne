@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'startMeasure,\w+,\w+,-?\d+,-?\d+,-?\d+,-?\d+$',inp) : 
+		if re.match(r'startMeasure,\w+,\w+,-?\d+,-?\d+,-?\d+,-?\d+$',inp):
 			event_1carA = str(list_inp[1])
 			event_1carB = str(list_inp[2])
 			event_1xA = int(list_inp[3])
@@ -69,7 +68,7 @@ if __name__ == '__main__':
 			print('start' + ',' +  str(event_1CarA) + ',' +  str(event_1carB))
 
 
-		if re.match(r'location,\w+,\w+,-?\d+,-?\d+,-?\d+,-?\d+$',inp) : 
+		if re.match(r'location,\w+,\w+,-?\d+,-?\d+,-?\d+,-?\d+$',inp):
 			event_2carA = str(list_inp[1])
 			event_2carB = str(list_inp[2])
 			event_2xA = int(list_inp[3])
@@ -78,7 +77,7 @@ if __name__ == '__main__':
 			event_2yB = int(list_inp[6])
 			PAST_global_Distance = global_Distance
 			global_Distance = float((abs(event_2xA - event_2xB) **  2  + abs(event_2yA - event_2yB) **  2 ) **  0.5 )
-			event_2HighlyDecreasingDistance = bool((global_Distance - ite(PAST_global_Distance!= None,PAST_global_Distance,global_Distance)) <  -5 )
+			event_2HighlyDecreasingDistance = bool((global_Distance - ite(PAST_global_Distance!= None,PAST_global_Distance,global_Distance)) <  0 )
 			event_2CarA = str(event_2carA)
 			event_2CarB = str(event_2carB)
 			PAST_event_2carA = event_2carA
@@ -93,7 +92,7 @@ if __name__ == '__main__':
 			print('distance' + ',' +  str(event_2CarA) + ',' +  str(event_2CarB) + ',' +  str(event_2HighlyDecreasingDistance))
 
 
-		if re.match(r'startMonitoring,\w+,\w+$',inp) : 
+		if re.match(r'startMonitoring,\w+,\w+$',inp):
 			event_3carA = str(list_inp[1])
 			event_3carB = str(list_inp[2])
 			event_3CarA = str(event_3carA)
@@ -105,7 +104,7 @@ if __name__ == '__main__':
 			print('startMonitoring' + ',' +  str(event_3CarA) + ',' +  str(event_3CarB))
 
 
-		if re.match(r'stopMonitoring,\w+,\w+$',inp) : 
+		if re.match(r'stopMonitoring,\w+,\w+$',inp):
 			event_4carA = str(list_inp[1])
 			event_4carB = str(list_inp[2])
 			event_4CarA = str(event_4carA)

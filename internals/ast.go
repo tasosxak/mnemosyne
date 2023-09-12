@@ -36,6 +36,8 @@ type Typable interface {
 
 type EmptyProgramNode struct{}
 
+type EmptyStmtNode struct{}
+
 type EventListNode struct {
 	Events Node
 	Event  Node
@@ -47,6 +49,7 @@ type EventNode struct {
 	OutputsLen int
 	InputsLen  int
 	Inputs     Node
+	InTopic    string
 	Outputs    Node
 	Defs       Node
 	SendStmt   Node
@@ -72,7 +75,7 @@ type OutVarNode struct {
 
 type GlobalDefNode struct {
 	VarDecl Node
-	Value Node
+	Value   Node
 }
 
 type EmptyGlobalDefNode struct {
@@ -88,8 +91,10 @@ type InputNode struct {
 }
 
 type SendNode struct {
-	Name    string
-	OutVars Node
+	Name          string
+	OutVars       Node
+	OutTopic      string
+	WhenCondition Node
 }
 
 type StatementNode struct {
@@ -102,8 +107,11 @@ type StatementListNode struct {
 	Right Node
 }
 
+type WhenStmtNode struct {
+	Expr Node
+}
 type VarDeclNode struct {
-	Type Typos
+	Type  Typos
 	IDVar Node
 	Value Node
 }
@@ -138,18 +146,22 @@ type UnaryOpNode struct {
 
 type NumNode struct {
 	Value int
+	Type  Typos
 }
 
 type RealNumNode struct {
 	Value float64
+	Type  Typos
 }
 
 type BooleanNode struct {
 	Value string
+	Type  Typos
 }
 
 type StrNode struct {
 	Value string
+	Type  Typos
 }
 
 type PastOpNode struct {
@@ -193,14 +205,14 @@ func compileCastInput(t Typos, index int) string {
 	var outputCastInput string
 
 	switch t {
-		case Integer:
-			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
-		case Boolean:
-			outputCastInput = strType(t) + "(int(list_inp[" + strconv.Itoa(index) + "]))\n"
-		case String:
-			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
-		case Real:
-			outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+	case Integer:
+		outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+	case Boolean:
+		outputCastInput = strType(t) + "(int(list_inp[" + strconv.Itoa(index) + "]))\n"
+	case String:
+		outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
+	case Real:
+		outputCastInput = strType(t) + "(list_inp[" + strconv.Itoa(index) + "])\n"
 	}
 
 	return outputCastInput
@@ -210,7 +222,13 @@ func (n EventNode) compile() string {
 	tabs += 1
 	var mapInputs string
 	var alterPastVars string
-	regPattern := n.Name
+	var regPattern string
+
+	if n.Name == "_" {
+		regPattern = "\\w+"
+	} else {
+		regPattern = n.Name
+	}
 	//outStreamEvent := "'" + n.Name + "'"
 
 	for i, symbol := range inputDefs[n.CurIndex-1] {
@@ -248,26 +266,40 @@ func (n EventNode) compile() string {
 		outStreamEvent += " + ',' + str(" + symbol.compile() + ")"
 	}*/
 
-	output := ptabs(tabs+1) + "if re.match(r'" + regPattern + "'," + "inp" + ") : " + "\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + n.SendStmt.compile() + "\n"
+	output := ptabs(tabs+1) + "if " + compileInputPattern(&n, regPattern) + ":\n" + ptabs(tabs+2) + "_EVENT_NAME = str(list_inp[0])\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + n.SendStmt.compile() + "\n"
 	tabs -= 1
 	return output
 }
 
-func compileOutEvents(outEvent string) string {
+func compileInputPattern(n *EventNode, regPattern string) string {
+
+	matchstr := "re.match(r'" + regPattern + "',"
+	if n.InTopic == "stdin" {
+		return matchstr + "inp" + ")"
+	}
+
+	return "inp.topic() == \"" + n.InTopic + "\" and " + matchstr + "inp.value().decode('utf-8')" + ")"
+}
+
+func compileOutEvents(outEvent string, topic string) string {
 
 	var out string
 
-	if Kafka == true {
-		out += ptabs(tabs+2) + "kafka_handler.send_event(" + outEvent + ")\n"
+	if topic == "stdout" {
+		out += ptabs(tabs+2) + "print(" + outEvent + ")\n"
 		//out += ptabs(tabs+2) + "kafka_handler.receive_feedback()\n"
 	} else {
-		out += ptabs(tabs+2) + "print(" + outEvent + ")\n"
+		out += ptabs(tabs+2) + "producer.produce(topic='" + topic + "', value=" + outEvent + ")\n"
 	}
 
 	return out
 }
 
 func (n EmptyProgramNode) compile() string {
+	return ""
+}
+
+func (n EmptyStmtNode) compile() string {
 	return ""
 }
 
@@ -293,16 +325,55 @@ func (n ProgramNode) compile() string {
 
 	}
 
-	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" + compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + ptabs(tabs+2) + "try:\n" + ptabs(tabs+3) + "inp = input()\n" + ptabs(tabs+3) + "list_inp = inp.split(',')\n" + ptabs(tabs+2) + "except EOFError:\n" + ptabs(tabs+3) + "exit()\n" + n.Events.compile()
+	return compileImportStatements() + compileKafka() + compileOperators() + bufferDecls + "\nif __name__ == '__main__':\n" + compileKafkaInstance() + ptabs(tabs+1) + "while True:\n" + compileReading() + n.Events.compile()
 
 }
 
 func compileOperators() string {
-	return "def ite(condition, b1, b2): \n\treturn b1 if condition else b2\n\n"
+
+	functions := "def ite(condition, b1, b2): \n\treturn b1 if condition else b2\n\n"
+
+	if Kafka == true {
+
+		var topicList string = ""
+		for _, topic := range inTopics {
+			topicList += "'" + topic + "',"
+		}
+
+		for _, topic := range outTopics {
+			topicList += "'" + topic + "',"
+		}
+
+		functions += "def cleanup_topics(): admin_client.delete_topics([" + topicList + "], operation_timeout=30)\n\n"
+		functions += "atexit.register(cleanup_topics)\n\n"
+
+	}
+
+	return functions
 }
 
 func compileImportStatements() string {
-	return "import re\n\n"
+
+	imports := "import re\n"
+
+	if Kafka {
+		imports += "from confluent_kafka import Consumer, Producer, KafkaError\n"
+		imports += "import atexit\nfrom confluent_kafka.admin import AdminClient\n"
+	}
+
+	return imports
+}
+
+func compileReading() string {
+
+	if !Kafka {
+		return ptabs(tabs+2) + "try:\n" + ptabs(tabs+3) + "inp = input()\n" + ptabs(tabs+3) + "list_inp = inp.split(',')\n" + ptabs(tabs+2) + "except EOFError:\n" + ptabs(tabs+3) + "exit()\n"
+	}
+	cm := ptabs(tabs+2) + "inp = consumer.poll()\n"
+	cm += ptabs(tabs+2) + "if inp is None or inp.error():\n" + ptabs(tabs+3) + "continue\n"
+	cm += ptabs(tabs+2) + "list_inp = str(inp.value().decode('utf-8')).split(',')\n"
+	return cm
+
 }
 
 func compileKafkaInstance() string {
@@ -311,7 +382,19 @@ func compileKafkaInstance() string {
 		return ""
 	}
 
-	return ptabs(tabs+1) + "kafka_handler = KafkaEventHandler('localhost:9092','event_topic', 'feedback_topic','dejavu_group')\n"
+	producerDefs := ptabs(tabs+1) + "producer = Producer(producer_config)\n\n"
+
+	consumerDefs := ptabs(tabs+1) + "consumer = Consumer(consumer_config)\n" //create consumer instance
+
+	consumerDefs += ptabs(tabs+1) + "consumer.subscribe(["
+	for _, topic := range inTopics {
+
+		consumerDefs += "\"" + topic + "\", "
+	}
+
+	consumerDefs += "])\n"
+
+	return consumerDefs + producerDefs
 
 }
 
@@ -337,7 +420,7 @@ func (n StatementNode) compile() string {
 	expr := n.Rval.compile()
 	var output string
 
-	if  definedGlobalSymbol(n.Lval.(*IDNode).name) == true {
+	if definedGlobalSymbol(n.Lval.(*IDNode).name) == true {
 
 		output = ptabs(tabs) + "PAST_" + n.Lval.compile() + " = " + n.Lval.compile() + "\n"
 		output += ptabs(tabs) + n.Lval.compile() + " = " + strType(n.Lval.(*IDNode).Type) + "(" + expr + ")"
@@ -345,7 +428,7 @@ func (n StatementNode) compile() string {
 	} else {
 		output += ptabs(tabs) + n.Lval.compile() + " = " + strType(n.Lval.(*IDNode).Type) + "(" + expr + ")"
 	}
-	
+
 	tabs -= 2
 	return output
 }
@@ -355,7 +438,30 @@ func (n InputNode) compile() string {
 }
 
 func (n SendNode) compile() string {
-	return compileOutEvents("'" + n.Name + "'" + " + " + n.OutVars.compile())
+
+	var eventName string
+
+	if n.Name == "_" {
+		eventName = "_EVENT_NAME"
+	} else {
+		eventName = "'" + n.Name + "'"
+	}
+
+	w := n.WhenCondition.compile()
+
+	l := n.OutVars.compile()
+	if l == "" {
+		l = "''"
+	}
+
+	if w != "" {
+
+		cond := ptabs(tabs+2) + "if " + w + " :\n"
+		cond += ptabs(tabs) + compileOutEvents(eventName+" + "+l, n.OutTopic)
+		return cond
+	}
+
+	return compileOutEvents(eventName+" + "+l, n.OutTopic)
 }
 
 func (n OutVarListNode) compile() string {
@@ -369,6 +475,10 @@ func (n OutVarNode) compile() string {
 func (n StatementListNode) compile() string {
 
 	return n.Left.compile() + "\n" + n.Right.compile()
+}
+
+func (n WhenStmtNode) compile() string {
+	return n.Expr.compile()
 }
 
 func (n OutputNode) compile() string {
@@ -394,9 +504,9 @@ func (n VarDeclNode) compile() string {
 	compiledValue := ""
 
 	if n.Value != nil {
-		compiledValue = " = " +  strType(n.Type)  + "(" +  n.Value.compile() + ")"
+		compiledValue = " = " + strType(n.Type) + "(" + n.Value.compile() + ")"
 	}
-	return n.IDVar.compile() + compiledValue 
+	return n.IDVar.compile() + compiledValue
 }
 
 func (n VarDecListNode) compile() string {
@@ -416,7 +526,7 @@ func (n BooleanNode) compile() string {
 }
 
 func (n StrNode) compile() string {
-	return " '" + n.Value + "' "
+	return n.Value
 }
 
 func (n BooleanNode) getType() Typos {
@@ -428,7 +538,7 @@ func (n StrNode) getType() Typos {
 }
 
 func (n RealNumNode) compile() string {
-	return " " + strconv.FormatFloat( n.Value, 'g', 5, 64) + " "
+	return " " + strconv.FormatFloat(n.Value, 'g', 5, 64) + " "
 }
 
 func (n RealNumNode) getType() Typos {
@@ -484,6 +594,9 @@ func (n UnaryOpNode) compile() string {
 }
 
 func (n BinaryOpNode) compile() string {
+	if n.Op == "~" {
+		return fmt.Sprintf("re.match(r%s, %s)", n.Rexpr.compile(), n.Lexpr.compile())
+	}
 	return n.Lexpr.compile() + " " + n.Op + " " + n.Rexpr.compile()
 }
 func (n TypeNode) compile() string {
@@ -492,14 +605,15 @@ func (n TypeNode) compile() string {
 
 func (n IteNode) compile() string {
 
-	return "ite(" + n.Condition.compile() + ", " + n.Then.compile() + ", " + n.Else.compile() + ")"
+	//ite(" + n.Condition.compile() + ", " + n.Then.compile() + ", " + n.Else.compile() + ")"
+	return fmt.Sprintf("ite(%s, %s, %s)", n.Condition.compile(), n.Then.compile(), n.Else.compile())
 
 }
 
 func createSymbolTable() {
 
 	current_symbol_index += 1
-	
+
 	SymbolTable = append(SymbolTable, make(map[string]*IDNode))
 	//fmt.Println(SymbolTable)
 }
@@ -511,6 +625,9 @@ func definedSymbol(id string) bool {
 
 	if !exists {
 		_, exists = SymbolTable[0][id] // Global variable
+	}
+	if id == "_" {
+		return true
 	}
 	//fmt.Println("definedSymbol")
 	return exists
@@ -533,10 +650,16 @@ func addSymbol(id string, n *IDNode) {
 func getSymbol(id string) *IDNode {
 
 	//fmt.Println("getSymbol")
-	symb , exists := SymbolTable[current_symbol_index][id]
+	symb, exists := SymbolTable[current_symbol_index][id]
 
 	if !exists {
-		symb  = SymbolTable[0][id]
+		symb = SymbolTable[0][id]
+	}
+
+	if id == "_" && !exists {
+
+		symb = &IDNode{prefix: "_", name: "EVENT_NAME", Type: String}
+		addSymbol("_", symb)
 	}
 
 	return symb
@@ -548,10 +671,48 @@ func assertSameType(id string, n Node) {
 
 	switch n := n.(type) {
 	case Typable:
-		if n.getType() != s.getType() && !( (n.getType() == Real && s.getType() == Integer) || (n.getType() == Integer && s.getType() == Real )) {
+		if n.getType() != s.getType() && !((n.getType() == Real && s.getType() == Integer) || (n.getType() == Integer && s.getType() == Real)) {
 			compilerError(id + " variable type is " + strType(s.getType()) + ", but the corresponding expression is " + strType(n.getType()))
 		}
 	}
+}
+
+func assertNumericalType(n Node) {
+	switch n := n.(type) {
+	case Typable:
+		if (n.getType() != Real) && (n.getType() != Integer) {
+			compilerError(" Expected numerical value, but found " + strType(n.getType()))
+		}
+	}
+
+}
+
+func assertStringType(n Node) {
+	switch n := n.(type) {
+	case Typable:
+		if n.getType() != String {
+			compilerError(" Expected string, but found " + strType(n.getType()))
+		}
+	}
+
+}
+
+func getTypeInference(n1 Node, n2 Node) Typos {
+	switch tn1 := n1.(type) {
+	case Typable:
+		switch tn2 := n2.(type) {
+		case Typable:
+			if tn1.getType() == Real || tn2.getType() == Real {
+				return Real
+			} else if tn1.getType() == String && tn2.getType() == String {
+				return String
+			} else if tn1.getType() == Boolean && tn2.getType() == Boolean {
+				return Boolean
+			}
+		}
+	}
+
+	return Integer
 }
 
 func assertSameTypeNodes(n1 Node, n2 Node) {
@@ -560,7 +721,7 @@ func assertSameTypeNodes(n1 Node, n2 Node) {
 	case Typable:
 		switch tn2 := n2.(type) {
 		case Typable:
-			if (tn1.getType() != tn2.getType()) && !( (tn1.getType() == Real && tn2.getType() == Integer) || (tn1.getType() == Integer && tn2.getType() == Real )) {
+			if (tn1.getType() != tn2.getType()) && !((tn1.getType() == Real && tn2.getType() == Integer) || (tn1.getType() == Integer && tn2.getType() == Real)) {
 				compilerError("Type Error: Lval and Rval expressions should be in the same type. I got " + strType(tn1.getType()) + " and " + strType(tn2.getType()))
 			}
 		}
@@ -602,7 +763,6 @@ func assertDefined(id string) {
 		compilerError("Variable " + id + " has not been defined.")
 	}
 }
-
 
 func strType(t Typos) string {
 

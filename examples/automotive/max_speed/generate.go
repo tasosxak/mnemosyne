@@ -69,7 +69,7 @@ func initialize() {
 	for i := 0; i < NCARS; i++ {
 		Cars = append(Cars, &Car{
 			Maker: Manifacturers[rand.Intn(len(Manifacturers))],
-			Speed: 0,
+			Speed: rand.Intn(100),
 		})
 	}
 }

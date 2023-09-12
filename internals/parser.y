@@ -9,7 +9,8 @@ var predefinedIDs = []*IDNode{}
 var inputDefs = [][]*IDNode{}
 var outputDefs = [][]*IDNode{}
 var globalDefs = []*GlobalDefNode{}
-
+var inTopics = []string{}
+var outTopics = []string{}
 var GLOBAL bool = true 
 
 %}
@@ -24,11 +25,11 @@ Node
 
 }
 
-%token  INPUT ID END OUTPUT ON ASSIGN COMMA NUM LITERAL DO SEND LPAR RPAR PIPE LBR RBR BOOL INT STR REAL EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE INITIATE
+%token ID END OUT ON ASSIGN COMMA TAB FROM TO NUM LITERAL DO CHANNEL WHEN SEND LPAR RPAR PIPE LBR RBR BOOL INT STR REAL EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE
 %token <name> ID LITERAL
 %token <n> NUM
 %token <realn> REALNUM
-%type <Node> identifier itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm sendstatement outputvars outvar globaldefs globaldeflist globaldef globalvalue
+%type <Node> identifier itexpr expr statementlist eventlist event vardecl varlist program inputdecl outputdecl streamdecl statement whenstmt mathexpr arithmexpr addpart mulpart unary term relexpr logexpr logpart logunary logterm sendstatement outputvars outvar channeldefs channeldef channeldeflist globalvalue
 %type <IDNode> 
 %type <tt> type
 %%
@@ -38,7 +39,7 @@ program: {
     $$ = EmptyProgramNode{};
     Root = $$;
 }
-| globaldefs eventlist {
+| channeldefs eventlist {
 
     $$ = ProgramNode{
         GlobalVars: $1,
@@ -56,12 +57,12 @@ eventlist: eventlist event {
 }
 ;
 
-globaldefs: INITIATE globaldeflist END {
+channeldefs: channeldeflist {
     
     createSymbolTable();
     GLOBAL = false;
 
-    $$ = $2;
+    $$ = $1;
 }
 | {
      
@@ -72,26 +73,26 @@ globaldefs: INITIATE globaldeflist END {
 }
 ;
 
-globaldeflist: globaldeflist globaldef {
+channeldeflist: channeldeflist channeldef {
 
     $$ = GlobalDefListNode{
         GlobalDefinitions: $1,
         GlobalDefinition: $2,
     }
 }
-| globaldef {
+| channeldef {
 
     $$ = $1;
 }
 ;
 
-globaldef: vardecl ASSIGN globalvalue SC {
+channeldef: CHANNEL vardecl ASSIGN globalvalue SC {
 
-     assertSameTypeNodes($1.(VarDeclNode).IDVar, $3)
+     assertSameTypeNodes($2.(VarDeclNode).IDVar, $4)
 
      p := GlobalDefNode{
-        VarDecl: $1,
-        Value: $3,
+        VarDecl: $2,
+        Value: $4,
     }
 
     globalDefs = append(globalDefs, &p)
@@ -101,20 +102,23 @@ globaldef: vardecl ASSIGN globalvalue SC {
 ;
 
 globalvalue: FALSE {
-    $$ = BooleanNode{"False"};
+    $$ = BooleanNode{"False", Boolean};
 }
 |  TRUE {
-    $$ = BooleanNode{"True"};
+    $$ = BooleanNode{"True", Boolean};
 }
 | NUM {
-     $$ = NumNode{$1};
+     $$ = NumNode{$1, Integer};
 }
 | REALNUM {
-    $$ = RealNumNode{$1};
+    $$ = RealNumNode{$1, Real};
+}
+| LITERAL {
+    $$ = StrNode{$1, String}
 }
 ;
 
-event: ON ID LPAR inputdecl RPAR DO outputdecl streamdecl sendstatement END {
+event: ON ID LPAR inputdecl RPAR FROM ID DO outputdecl streamdecl sendstatement END {
 
     $$ = EventNode{ 
             Name: $2, 
@@ -122,11 +126,31 @@ event: ON ID LPAR inputdecl RPAR DO outputdecl streamdecl sendstatement END {
             InputsLen: len(inputDefs[current_symbol_index-1]),
             OutputsLen: len(outputDefs[current_symbol_index-1]),
             Inputs: $4, 
-            Outputs: $7, 
-            Defs: $8,
-            SendStmt: $9,
+            Outputs: $9,
+            InTopic: $7,
+            Defs: $10,
+            SendStmt: $11,
             };
+    
+    if ($7 != "stdin") {
 
+        exists := false
+        for _, topic := range inTopics {
+            if topic == $7 {
+                exists = true
+                break
+            }
+        }
+        if !exists {
+            inTopics = append(inTopics, $7)
+        }
+        
+        Kafka = true
+    } else if (Kafka == true) {
+        compilerError("You cannot use kafka and stdin.")
+    }
+
+   
     createSymbolTable();
    
 }
@@ -147,9 +171,18 @@ inputdecl: varlist {
 
     $$ = InputNode{$1};
 }
+| {
+    copyOfDefs := make([]*IDNode, len(predefinedIDs))
+    copy(copyOfDefs, predefinedIDs[:])
+    inputDefs = append(inputDefs, copyOfDefs)
+ 
+    predefinedIDs = predefinedIDs[:0]
+
+    $$ = EmptyStmtNode{};
+}
 ;
 
-outputdecl: OUTPUT varlist SC {
+outputdecl: OUT varlist SC {
 
     for _, idNode := range predefinedIDs {
         idNode.tstream = OutputStream
@@ -162,6 +195,15 @@ outputdecl: OUTPUT varlist SC {
     predefinedIDs = predefinedIDs[:0]
 
     $$ = OutputNode{$2};
+}
+| {
+    
+    copyOfDefs := make([]*IDNode, len(predefinedIDs))
+    copy(copyOfDefs, predefinedIDs[:])
+    outputDefs = append(outputDefs, copyOfDefs)
+
+    predefinedIDs = predefinedIDs[:0]
+    $$ = EmptyStmtNode{}
 }
 ;
 
@@ -201,11 +243,43 @@ statement: ID ASSIGN expr SC {
 }
 ;
 
-sendstatement: SEND ID LPAR outputvars RPAR SC {
+sendstatement: SEND ID LPAR outputvars RPAR TO ID whenstmt SC {
     $$ = SendNode {
         Name: $2,
         OutVars: $4,
+        OutTopic: $7,
+        WhenCondition: $8,
     }
+
+    if ($7 != "stdout") {
+
+        exists := false
+        for _, topic := range outTopics {
+            if topic == $7 {
+                exists = true
+                break
+            }
+        }
+        if !exists {
+            outTopics = append(outTopics, $7)
+        }
+        
+        Kafka = true
+    }
+
+}
+|   {
+    $$ = EmptyStmtNode{}
+}
+;
+
+whenstmt: WHEN logexpr {
+    $$ = WhenStmtNode{
+        Expr: $2,
+    }
+}
+|  {
+    $$ = EmptyStmtNode{}
 }
 ;
 
@@ -218,6 +292,9 @@ outputvars: outputvars COMMA outvar {
 }
 | outvar {
     $$ = $1;
+}
+| {
+    $$ = EmptyStmtNode{}
 }
 ;
 
@@ -288,10 +365,10 @@ logterm: relexpr {
 
 }
 | FALSE {
-    $$ = BooleanNode{"False"}
+    $$ = BooleanNode{"False", Boolean}
 }
 | TRUE {
-    $$ = BooleanNode{"True"}
+    $$ = BooleanNode{"True", Boolean}
 }
 ;
 
@@ -313,6 +390,11 @@ relexpr: mathexpr LE mathexpr {
 | mathexpr EQ mathexpr {
     $$ = BinaryOpNode{$1, "==", $3, Boolean}
 }
+| mathexpr TAB mathexpr {
+    assertStringType($1)
+    assertStringType($3)
+    $$ = BinaryOpNode{$1, "~", $3, Boolean}
+}
 /*| mathexpr {
     assertType($1, Boolean)
     $$=$1;
@@ -320,10 +402,13 @@ relexpr: mathexpr LE mathexpr {
 ;
 
 mathexpr:  mathexpr ADD addpart {
-    $$ = BinaryOpNode{ $1, "+", $3, Integer}
+    // TODO: assert no boolean values
+    $$ = BinaryOpNode{ $1, "+", $3, getTypeInference($1,$3)}
 }
 | mathexpr MINUS addpart {
-    $$ = BinaryOpNode{ $1, "-", $3, Integer}
+    assertNumericalType($1)
+    assertNumericalType($3)
+    $$ = BinaryOpNode{ $1, "-", $3, getTypeInference($1,$3)}
 }
 | addpart {
     $$ = $1;
@@ -331,13 +416,15 @@ mathexpr:  mathexpr ADD addpart {
 ;
 
 addpart: addpart TIMES mulpart {
-
-    $$ = BinaryOpNode{ $1, "*", $3, Integer}
+    assertNumericalType($1)
+    assertNumericalType($3)
+    $$ = BinaryOpNode{ $1, "*", $3,  getTypeInference($1,$3)}
 
 }
 | addpart DIV mulpart {
-
-    $$ = BinaryOpNode{ $1, "//", $3, Integer}
+    assertNumericalType($1)
+    assertNumericalType($3)
+    $$ = BinaryOpNode{ $1, "/", $3,  getTypeInference($1,$3)}
 
 }
 | mulpart {
@@ -346,7 +433,9 @@ addpart: addpart TIMES mulpart {
 ;
 
 mulpart: term EXP mulpart {
-        $$ = BinaryOpNode{ $1, "**", $3, Integer}
+        assertNumericalType($1)
+        assertNumericalType($3)
+        $$ = BinaryOpNode{ $1, "**", $3, getTypeInference($1,$3)}
 }
 | unary {
     $$=$1;
@@ -354,7 +443,9 @@ mulpart: term EXP mulpart {
 ;
 
 unary: MINUS unary {
-    $$ = UnaryOpNode{"-", $2, Integer}
+
+    assertNumericalType($2)
+    $$ = UnaryOpNode{"-", $2, $2.(Typable).getType()}
 }
 | AT term LBR arithmexpr RBR {
   
@@ -366,6 +457,8 @@ unary: MINUS unary {
     $$ = $1;
 }
 ;
+
+
 
 itexpr: ITE LPAR logexpr COMMA arithmexpr COMMA arithmexpr RPAR {
 
@@ -400,19 +493,19 @@ term: identifier {
     $$ = $1;
 }
 | LPAR mathexpr RPAR {
-    $$ = ParenthesisOpNode{$2, Integer};
+    $$ = ParenthesisOpNode{$2, $2.(Typable).getType()};
 }
 | PIPE mathexpr PIPE {
-    $$ = AbsOpNode {$2, Integer}
+    $$ = AbsOpNode {$2, $2.(Typable).getType()}
 }
 | NUM {
-    $$ = NumNode{$1}
+    $$ = NumNode{$1, Integer}
 }
 | LITERAL {
-    $$ = StrNode{$1}
+    $$ = StrNode{$1, String}
 }
 | REALNUM {
-    $$ = RealNumNode{$1}
+    $$ = RealNumNode{$1, Real}
 }
 ;
 

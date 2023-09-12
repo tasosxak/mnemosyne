@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -19,7 +18,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'recorded,\w+,-?\d+$',inp) : 
+		if re.match(r'recorded,\w+,-?\d+$',inp):
 			event_1maker = str(list_inp[1])
 			event_1speed = int(list_inp[2])
 			event_1NewRecord = bool(ite(PAST_global_MaxSpeed!= None,PAST_global_MaxSpeed,global_MaxSpeed) < event_1speed)

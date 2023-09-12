@@ -1,0 +1,26 @@
+/* #Violations > 2 -> STOP */
+
+channel bool Danger <- false;
+channel int Violations <- 0;
+
+/* Reads events from the system */
+on system(int level) from system_topic do
+    Danger <-  ite(level - @level[level] > 0, true, false);
+    send STATUS(Danger) to stdout;
+end
+
+/* Reads the runtime monitor verdict */
+on verdict(bool verd) from rm_topic do
+    Violations <- ite(#verd, Violations + 1, Violations);
+    send shutdown() to rules_topic when (Violations > 2);
+end
+
+/* Rule */
+on shutdown() from rules_topic do
+    out bool danger, int violations;
+    Violations <- 0;
+    Danger <- false;
+    violations <- @Violations[Violations];
+    danger <- @Danger[Danger];
+    send STOP(danger,violations) to stdout;
+end

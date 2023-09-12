@@ -1,10 +1,10 @@
-initiate
-    int MaxSpeed <- 0;
-end
-on recorded(string maker, int speed) do
-    output string Maker, bool NewRecord;
+
+channel int MaxSpeed <- 0;
+
+on recorded(string maker, int speed) from stdin do
+    out string Maker, bool NewRecord;
     NewRecord <- @MaxSpeed[MaxSpeed] < speed;
     MaxSpeed <- ite(@MaxSpeed[MaxSpeed] < speed, speed, @MaxSpeed[MaxSpeed]);
     Maker <- maker;
-    send fast(Maker, NewRecord);
+    send fast(Maker, NewRecord) to stdout;
 end

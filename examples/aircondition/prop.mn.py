@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -25,7 +24,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'set,\w+,-?\d+$',inp) : 
+		if re.match(r'set,\w+,-?\d+$',inp):
 			event_1ac = str(list_inp[1])
 			event_1temp = int(list_inp[2])
 			event_1InBound = bool(event_1temp >=  17  and event_1temp <=  26 )
@@ -39,7 +38,7 @@ if __name__ == '__main__':
 			print('set' + ',' +  str(event_1Ac) + ',' +  str(event_1Temp) + ',' +  str(event_1InBound))
 
 
-		if re.match(r'turn_on,\w+$',inp) : 
+		if re.match(r'turn_on,\w+$',inp):
 			event_2ac = str(list_inp[1])
 			event_2Ac = str(event_2ac)
 			PAST_event_2ac = event_2ac
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 			print('turn_on' + ',' +  str(event_2Ac))
 
 
-		if re.match(r'turn_off,\w+$',inp) : 
+		if re.match(r'turn_off,\w+$',inp):
 			event_3ac = str(list_inp[1])
 			event_3Ac = str(event_3ac)
 			PAST_event_3ac = event_3ac

@@ -1,0 +1,18 @@
+on open(string file) from topic_1 do
+    out string id;
+    id <- file;
+    send open(id) to stdout;
+end
+
+on close(string file) from topic_1 do
+    out string id;
+    id <- file;
+    send close(id) to stdout;
+end
+
+on write(string file, string user) from topic_1 do
+    out string fileId, string userId;
+    fileId <- file;
+    userId <- user;
+    send userId(fileId, userId) to stdout;
+end

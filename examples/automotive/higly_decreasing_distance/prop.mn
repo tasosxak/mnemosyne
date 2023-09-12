@@ -1,34 +1,32 @@
-initiate
-    real Distance <- -1;
-end
+channel real Distance <- -1;
 
-on startMeasure(string carA, string carB, int xA, int yA, int xB, int yB) do
-    output string CarA, string CarB;
+on startMeasure(string carA, string carB, int xA, int yA, int xB, int yB) from stdin do
+    out string CarA, string CarB;
     Distance <- (|xA-xB|^2 + |yA-yB|^2) ^ 0.5;
     CarA <- carA;
     CarB <- carB;
-    send start(CarA,carB);
+    send start(CarA,carB) to stdout;
 end
 
-on location(string carA, string carB, int xA, int yA, int xB, int yB) do
-    output string CarA, string CarB, bool HighlyDecreasingDistance;
+on location(string carA, string carB, int xA, int yA, int xB, int yB) from stdin do 
+    out string CarA, string CarB, bool HighlyDecreasingDistance;
     Distance <- (|xA-xB|^2 + |yA-yB|^2) ^ 0.5;
-    HighlyDecreasingDistance <- (Distance - @Distance[Distance]) < -5;
+    HighlyDecreasingDistance <- (Distance - @Distance[Distance]) < 0;
     CarA <- carA;
     CarB <- carB;
-    send distance(CarA, CarB, HighlyDecreasingDistance);
+    send distance(CarA, CarB, HighlyDecreasingDistance) to stdout;
 end
 
-on startMonitoring(string carA, string carB) do
-    output string CarA, string CarB;
+on startMonitoring(string carA, string carB) from stdin do
+    out string CarA, string CarB;
     CarA <- carA;
     CarB <- carB;
-    send startMonitoring(CarA, CarB);
+    send startMonitoring(CarA, CarB) to stdout;
 end
 
-on stopMonitoring(string carA, string carB) do
-    output string CarA, string CarB;
+on stopMonitoring(string carA, string carB) from stdin do
+    out string CarA, string CarB;
     CarA <- carA;
     CarB <- carB;
-    send stopMonitoring(CarA, CarB);
+    send stopMonitoring(CarA, CarB) to stdout;
 end

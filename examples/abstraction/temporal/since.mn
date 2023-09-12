@@ -1,0 +1,11 @@
+channel string E <- "";
+
+on q() from stdin do
+    E <- "q";
+    send q() to stdout when @E[E] <> "q";
+end
+
+on p() from stdin do
+    E <- "p";
+    send p() to stdout;
+end

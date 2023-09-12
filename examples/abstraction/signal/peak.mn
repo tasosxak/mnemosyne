@@ -1,0 +1,18 @@
+channel real Signal <- 0;
+channel bool Deff <- true;
+channel bool Peak <- false;
+channel bool Half <- false;
+channel int TimeHalf <- -1;
+
+on _(real val, int timestamp) from stdin do
+    TimeHalf <- ite(#Peak, -1,  TimeHalf);
+    Deff <- ite(#Peak, true,  Deff);
+    Half <- ite(#Peak, false, Half);
+    Peak <- ite(#Peak, false, Peak);
+    Signal <- val;
+    Deff <- ite(((Signal - @Signal[Signal]) >= 0) , true, false);
+    Half <- Deff <> @Deff[Deff];
+    TimeHalf <- ite(#Half and TimeHalf = -1, @timestamp[timestamp], TimeHalf);
+    Peak <-  #Half and #Deff;
+    send peak(TimeHalf, timestamp) to stdout when #Peak;
+end

@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -20,7 +19,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'report,\w+,\w+,-?\d+$',inp) : 
+		if re.match(r'report,\w+,\w+,-?\d+$',inp):
 			event_1carA = str(list_inp[1])
 			event_1carB = str(list_inp[2])
 			event_1distance = int(list_inp[3])

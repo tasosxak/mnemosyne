@@ -1,5 +1,4 @@
 import re
-
 def ite(condition, b1, b2): 
 	return b1 if condition else b2
 
@@ -21,7 +20,7 @@ if __name__ == '__main__':
 			list_inp = inp.split(',')
 		except EOFError:
 			exit()
-		if re.match(r'instance,-?\d+,-?\d+,-?\d+,-?\d+$',inp) : 
+		if re.match(r'instance,-?\d+,-?\d+,-?\d+,-?\d+$',inp):
 			event_1vDetected = int(list_inp[1])
 			event_1vGroundTruth = int(list_inp[2])
 			event_1steering = int(list_inp[3])

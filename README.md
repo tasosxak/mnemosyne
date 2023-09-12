@@ -94,17 +94,17 @@ nex -o internals/lexer.go internals/lexer.nex \
 ### Example
 
 ```c++
-on car(int speed, int speedLimit) do
+on car(int speed, int speedLimit) from stdin do
     output int deltaSpeed, bool underLimit;
     deltaSpeed <- speed - @speed[speed];
     underLimit <- speed <= speedLimit;
-    send car(deltaSpeed, underLimit);
+    send car(deltaSpeed, underLimit) to stdout;
 end
-on detect(bool objectDetected) do
+on detect(bool objectDetected) from stdin do
     output int speed, bool detected;
     speed <- ite(#objectDetected and @speed[10] < 5 , 0, 5);
     detected <- #@objectDetected[#objectDetected];
-    send detect(speed, detected);
+    send detect(speed, detected) to stdout;
 end
 ```
 
@@ -117,9 +117,4 @@ The tool generates a .py file, you can execute it running the command below:
 
 ```sh
 python3 examples/default/test.mn.py
-```
-
-You can enable Kafka integration using the flag `--kafka`:
-```sh
-./mnemosyne -file examples/kafka/prop.mn --kafka 
 ```

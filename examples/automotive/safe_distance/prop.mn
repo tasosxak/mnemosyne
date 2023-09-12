@@ -1,7 +1,7 @@
-on report(string carA, string carB, int distance) do
-    output bool SafeDistance, string CarA, string CarB;
+on report(string carA, string carB, int distance) from stdin do
+    out bool SafeDistance, string CarA, string CarB;
     SafeDistance <- distance < 10 and distance > 5;
     CarA <- carA;
     CarB <- carB;
-    send distance(CarA, CarB, SafeDistance);
+    send distance(CarA, CarB, SafeDistance) to stdout;
 end

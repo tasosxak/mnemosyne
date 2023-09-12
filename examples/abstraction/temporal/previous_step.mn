@@ -1,0 +1,11 @@
+channel int Counter <- 0;
+
+on p() from stdin do
+    Counter <- Counter + 1;
+    send p() to stdout when Counter <= 2;
+end
+
+on q() from stdin do
+    Counter <- 0;
+    send q() to stdout;
+end

@@ -1,7 +1,7 @@
-on instance(int vDetected, int vGroundTruth, int steering, int speed) do
-    output bool correctDetection, int deltaSteering, int deltaSpeed;
+on instance(int vDetected, int vGroundTruth, int steering, int speed) from stdin do
+    out bool correctDetection, int deltaSteering, int deltaSpeed;
     correctDetection <- vDetected = vGroundTruth;
     deltaSteering <-  |steering - @steering[steering]|;
     deltaSpeed <- speed - @speed[speed];
-    send instance(correctDetection, deltaSteering, deltaSpeed);
+    send instance(correctDetection, deltaSteering, deltaSpeed) to stdout;
 end
