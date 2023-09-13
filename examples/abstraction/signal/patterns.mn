@@ -1,0 +1,53 @@
+channel real Signal <- 0;
+channel bool Deff1 <- true;
+channel bool Deff2 <- false;
+channel bool LocalMax <- false;
+channel bool LocalMin <- false;
+channel bool Change1 <- false;
+channel bool Change2 <- false;
+channel int TimeChange1 <- -1;
+channel int TimeChange2 <- -1;
+
+/* Compute */
+on _(real val, int timestamp) from stdin do
+    Signal <- val;
+    Deff1 <- ite(((Signal - @Signal[Signal]) >= 0) , true, false);
+    Deff2 <- ite(((Signal - @Signal[Signal]) >= 0) , true, false);
+    Change1 <- Deff1 <> @Deff1[Deff1];
+    Change2 <- Deff2 <> @Deff2[Deff2];
+    TimeChange1 <- ite(#Change1 and TimeChange1 = -1, @timestamp[timestamp], TimeChange1);
+    TimeChange2 <- ite(#Change2 and TimeChange2 = -1, @timestamp[timestamp], TimeChange2);
+end
+
+/* Peak detector */
+on _(real val, int timestamp) from stdin do
+    out int prevTime;
+    TimeChange1 <- ite(#LocalMax, -1,  TimeChange1);
+    Change1 <- ite(#LocalMax, false, Change1);
+    LocalMax <- ite(#LocalMax, false, LocalMax);
+    LocalMax <-  #Change1 and #Deff1;
+    prevTime <- ite(#LocalMax, @timestamp[timestamp], timestamp);
+    send peak(TimeChange1, prevTime) to stdout when #LocalMax;
+end
+
+
+/* Fall detector */
+on _(real val, int timestamp) from stdin do
+    out int prevTime;
+    TimeChange2 <- ite(#LocalMin, -1,  TimeChange2);
+    Change2 <- ite(#LocalMin, false, Change2);
+    LocalMin <- ite(#LocalMin, false, LocalMin);
+    LocalMin <-  #Change2 and not #Deff2; /* TODO: special case if Signal - @Signal = 0 */
+    prevTime <- ite(#LocalMin, @timestamp[timestamp], timestamp);
+    send fall(TimeChange2, prevTime) to stdout when #LocalMin;
+end
+
+/*
+on _(real val, int timestamp) from stdin do
+    send rise(timestamp) to stdout when #Deff;
+end
+
+on _(real val, int timestamp) from stdin do
+    send fall(timestamp) to stdout when not #Deff;
+end
+*/

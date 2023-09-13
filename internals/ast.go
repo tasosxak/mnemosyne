@@ -407,7 +407,7 @@ func compileKafka() string {
 	if code, err := ioutil.ReadFile("internals/templates/kafka.template"); err == nil {
 		return string(code) + "\n"
 	} else {
-		fmt.Println("Read Error")
+		fmt.Println("\u001b[31mRead Error")
 		os.Exit(1)
 		return ""
 
@@ -753,7 +753,7 @@ func getExpressionType(n Node) Typos {
 
 func compilerError(msg string) {
 
-	fmt.Println(msg)
+	fmt.Println("\u001b[31m" + msg)
 	os.Exit(1)
 }
 
@@ -810,14 +810,16 @@ func Start(code string, filename string, kafka bool) {
 
 	Kafka = kafka
 
-	fmt.Println("Compiling ...")
+	fmt.Print("> ")
 	yyParse(NewLexer(strings.NewReader(code)))
-	fmt.Println(Root.compile())
+
+	//fmt.Println(Root.compile())
 
 	err := ioutil.WriteFile(filename+".py", []byte(Root.compile()), 0644)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("\u001b[31mError:", err)
 		return
 	}
-	fmt.Println("Success!")
+
+	fmt.Println("\u001b[32mFinished.")
 }

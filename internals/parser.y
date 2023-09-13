@@ -210,6 +210,9 @@ outputdecl: OUT varlist SC {
 streamdecl: statementlist {
     $$ = $1;
 }
+| {
+    $$ = EmptyStmtNode{}
+}
 ;
 
 statementlist: statementlist statement {
@@ -268,7 +271,7 @@ sendstatement: SEND ID LPAR outputvars RPAR TO ID whenstmt SC {
     }
 
 }
-|   {
+|  {
     $$ = EmptyStmtNode{}
 }
 ;
