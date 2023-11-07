@@ -12,6 +12,7 @@ var globalDefs = []*GlobalDefNode{}
 var inTopics = []string{}
 var outTopics = []string{}
 var GLOBAL bool = true 
+var ANONYMOUSPARAMS bool = false
 
 %}
 
@@ -25,7 +26,7 @@ Node
 
 }
 
-%token ID END OUT ON ASSIGN COMMA TAB FROM TO NUM LITERAL DO CHANNEL WHEN SEND LPAR RPAR PIPE LBR RBR BOOL INT STR REAL EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE
+%token ID END OUT ON ASSIGN COMMA THREEDOTS COLON TAB FROM TO NUM LITERAL DO CHANNEL WHEN SEND LPAR RPAR PIPE LBR RBR BOOL INT STR REAL EQ NEQ GE G LE L ADD MINUS DIV EXP TIMES AND OR NOT ITE SC DIESI AT FALSE TRUE
 %token <name> ID LITERAL
 %token <n> NUM
 %token <realn> REALNUM
@@ -150,6 +151,7 @@ event: ON ID LPAR inputdecl RPAR FROM ID DO outputdecl streamdecl sendstatement 
         compilerError("You cannot use kafka and stdin.")
     }
 
+    ANONYMOUSPARAMS = false;
    
     createSymbolTable();
    
@@ -170,6 +172,17 @@ inputdecl: varlist {
     predefinedIDs = predefinedIDs[:0]
 
     $$ = InputNode{$1};
+}
+| THREEDOTS {
+
+    copyOfDefs := make([]*IDNode, len(predefinedIDs))
+    copy(copyOfDefs, predefinedIDs[:])
+    inputDefs = append(inputDefs, copyOfDefs)
+ 
+    predefinedIDs = predefinedIDs[:0]
+
+    ANONYMOUSPARAMS = true
+    $$ = AnonymousInputNode{};
 }
 | {
     copyOfDefs := make([]*IDNode, len(predefinedIDs))
@@ -510,6 +523,18 @@ term: identifier {
 | REALNUM {
     $$ = RealNumNode{$1, Real}
 }
+| THREEDOTS LBR NUM RBR LBR type COMMA arithmexpr RBR{
+
+    if (ANONYMOUSPARAMS == false) {
+        compilerError("Attempting to access anonymous parameters in a block that does not accept them.");
+    }
+
+    $$ = AnonymousArrayElementNode{
+        Index: $3, 
+        Type: $6, 
+        AltExpr: $8,
+        }
+}
 ;
 
 vardecl: type ID {
@@ -554,5 +579,6 @@ type:  BOOL {
     $$ = t;
 }
 ;
+
 
 %%

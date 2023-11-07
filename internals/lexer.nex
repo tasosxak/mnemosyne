@@ -4,6 +4,8 @@
 
 /,/ { return COMMA }
 /;/ {return SC}
+/\.\.\./ {return THREEDOTS}
+/:/ {return COLON}
 /do/ {return DO}
 /channel/ {return CHANNEL}
 /when/ {return WHEN}

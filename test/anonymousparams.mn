@@ -1,0 +1,7 @@
+
+on _(...) from stdin do
+    out int y, int t; 
+    t <- ...[3][string, 0] + 5;
+    send x(y) to stdout;
+end
+    

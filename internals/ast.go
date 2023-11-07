@@ -121,6 +121,15 @@ type VarDecListNode struct {
 	Right Node
 }
 
+type AnonymousArrayElementNode struct {
+	Index   int
+	Type    Typos
+	AltExpr Node
+}
+
+type AnonymousInputNode struct {
+}
+
 type IDNode struct {
 	prefix  string
 	name    string
@@ -266,7 +275,7 @@ func (n EventNode) compile() string {
 		outStreamEvent += " + ',' + str(" + symbol.compile() + ")"
 	}*/
 
-	output := ptabs(tabs+1) + "if " + compileInputPattern(&n, regPattern) + ":\n" + ptabs(tabs+2) + "_EVENT_NAME = str(list_inp[0])\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + n.SendStmt.compile() + "\n"
+	output := ptabs(tabs+1) + "if " + compileInputPattern(&n, regPattern) + ":\n" + ptabs(tabs+2) + "_EVENT_NAME = str(list_inp[0])\n" + ptabs(tabs+2) + "_EVENT_PARAMS = list_inp[1:]\n" + mapInputs + n.Defs.compile() + "\n" + alterPastVars + n.SendStmt.compile() + "\n"
 	tabs -= 1
 	return output
 }
@@ -489,6 +498,21 @@ func (n EmptyGlobalDefNode) compile() string {
 	return ""
 }
 
+func (n AnonymousInputNode) compile() string {
+
+	return ""
+}
+
+func (n AnonymousArrayElementNode) compile() string {
+
+	return fmt.Sprintf("%s(_EVENT_PARAMS[%d])", strType(n.getType()), n.Index)
+}
+
+func (n AnonymousArrayElementNode) getType() Typos {
+
+	return n.Type
+}
+
 func (n GlobalDefListNode) compile() string {
 
 	return n.GlobalDefinitions.compile() + n.GlobalDefinition.compile()
@@ -708,6 +732,8 @@ func getTypeInference(n1 Node, n2 Node) Typos {
 				return String
 			} else if tn1.getType() == Boolean && tn2.getType() == Boolean {
 				return Boolean
+			} else {
+				compilerError(fmt.Sprintf(" Attempting an unsupported operation between a %s and an %s.", strType(tn1.getType()), strType(tn2.getType())))
 			}
 		}
 	}

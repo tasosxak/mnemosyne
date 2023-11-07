@@ -290,6 +290,56 @@ var dfas = []dfa{
 		},
 	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
 
+	// \.\.\.
+	{[]bool{false, false, false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 46:
+				return 1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 46:
+				return 2
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 46:
+				return 3
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 46:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1, -1, -1}, []int{ /* End-of-input transitions */ -1, -1, -1, -1}, nil},
+
+	// :
+	{[]bool{false, true}, []func(rune) int{ // Transitions
+		func(r rune) int {
+			switch r {
+			case 58:
+				return 1
+			}
+			return -1
+		},
+		func(r rune) int {
+			switch r {
+			case 58:
+				return -1
+			}
+			return -1
+		},
+	}, []int{ /* Start-of-input transitions */ -1, -1}, []int{ /* End-of-input transitions */ -1, -1}, nil},
+
 	// do
 	{[]bool{false, false, true}, []func(rune) int{ // Transitions
 		func(r rune) int {
@@ -2365,188 +2415,196 @@ OUTER0:
 			}
 		case 4:
 			{
-				return DO
+				return THREEDOTS
 			}
 		case 5:
 			{
-				return CHANNEL
+				return COLON
 			}
 		case 6:
 			{
-				return WHEN
+				return DO
 			}
 		case 7:
 			{
-				return FROM
+				return CHANNEL
 			}
 		case 8:
 			{
-				return TO
+				return WHEN
 			}
 		case 9:
 			{
-				return LPAR
+				return FROM
 			}
 		case 10:
 			{
-				return RPAR
+				return TO
 			}
 		case 11:
 			{
-				return LBR
+				return LPAR
 			}
 		case 12:
 			{
-				return TAB
+				return RPAR
 			}
 		case 13:
 			{
-				return PIPE
+				return LBR
 			}
 		case 14:
 			{
-				return RBR
+				return TAB
 			}
 		case 15:
 			{
-				return GE
+				return PIPE
 			}
 		case 16:
 			{
-				return G
+				return RBR
 			}
 		case 17:
 			{
-				return SEND
+				return GE
 			}
 		case 18:
 			{
-				return NEQ
+				return G
 			}
 		case 19:
 			{
-				return EQ
+				return SEND
 			}
 		case 20:
 			{
-				return DIESI
+				return NEQ
 			}
 		case 21:
 			{
-				return LE
+				return EQ
 			}
 		case 22:
 			{
-				return DIV
+				return DIESI
 			}
 		case 23:
 			{
-				return L
+				return LE
 			}
 		case 24:
 			{
-				return ADD
+				return DIV
 			}
 		case 25:
 			{
-				return MINUS
+				return L
 			}
 		case 26:
 			{
-				return AT
+				return ADD
 			}
 		case 27:
 			{
-				return EXP
+				return MINUS
 			}
 		case 28:
 			{
-				return TIMES
+				return AT
 			}
 		case 29:
 			{
-				return FALSE
+				return EXP
 			}
 		case 30:
 			{
-				return TRUE
+				return TIMES
 			}
 		case 31:
 			{
-				return ON
+				return FALSE
 			}
 		case 32:
 			{
-				return END
+				return TRUE
 			}
 		case 33:
 			{
-				return AND
+				return ON
 			}
 		case 34:
 			{
-				return OR
+				return END
 			}
 		case 35:
 			{
-				return ASSIGN
+				return AND
 			}
 		case 36:
 			{
-				return NOT
+				return OR
 			}
 		case 37:
 			{
-				return ITE
+				return ASSIGN
 			}
 		case 38:
 			{
-				return BOOL
+				return NOT
 			}
 		case 39:
 			{
-				return INT
+				return ITE
 			}
 		case 40:
 			{
-				return STR
+				return BOOL
 			}
 		case 41:
 			{
-				return REAL
+				return INT
 			}
 		case 42:
+			{
+				return STR
+			}
+		case 43:
+			{
+				return REAL
+			}
+		case 44:
 			{
 				lval.realn, _ = strconv.ParseFloat(yylex.Text(), 64)
 				return REALNUM
 			}
-		case 43:
-			{
-				lval.n, _ = strconv.Atoi(yylex.Text())
-				return NUM
-			}
-		case 44:
-			{
-				lval.n, _ = strconv.Atoi(yylex.Text())
-				return NUM
-			}
 		case 45:
+			{
+				lval.n, _ = strconv.Atoi(yylex.Text())
+				return NUM
+			}
+		case 46:
+			{
+				lval.n, _ = strconv.Atoi(yylex.Text())
+				return NUM
+			}
+		case 47:
 			{
 				lval.name = yylex.Text()
 				return ID
 			}
-		case 46:
+		case 48:
 			{
 				lval.name = yylex.Text()
 				return LITERAL
 			}
-		case 47:
+		case 49:
 			{ /* comments */
 			}
-		case 48:
+		case 50:
 			{
 			}
-		case 49:
+		case 51:
 			{
 			}
 		default:
