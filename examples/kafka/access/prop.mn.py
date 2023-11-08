@@ -49,6 +49,8 @@ if __name__ == '__main__':
 			continue
 		list_inp = str(inp.value().decode('utf-8')).split(',')
 		if inp.topic() == "topic_1" and re.match(r'open,\w+$',inp.value().decode('utf-8')):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_1file = str(list_inp[1])
 			event_1id = str(event_1file)
 			PAST_event_1file = event_1file
@@ -57,6 +59,8 @@ if __name__ == '__main__':
 
 
 		if inp.topic() == "topic_1" and re.match(r'close,\w+$',inp.value().decode('utf-8')):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_2file = str(list_inp[1])
 			event_2id = str(event_2file)
 			PAST_event_2file = event_2file
@@ -65,6 +69,8 @@ if __name__ == '__main__':
 
 
 		if inp.topic() == "topic_1" and re.match(r'write,\w+,\w+$',inp.value().decode('utf-8')):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_3file = str(list_inp[1])
 			event_3user = str(list_inp[2])
 			event_3fileId = str(event_3file)

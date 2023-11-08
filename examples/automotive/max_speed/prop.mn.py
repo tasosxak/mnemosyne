@@ -19,6 +19,8 @@ if __name__ == '__main__':
 		except EOFError:
 			exit()
 		if re.match(r'recorded,\w+,-?\d+$',inp):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_1maker = str(list_inp[1])
 			event_1speed = int(list_inp[2])
 			event_1NewRecord = bool(ite(PAST_global_MaxSpeed!= None,PAST_global_MaxSpeed,global_MaxSpeed) < event_1speed)

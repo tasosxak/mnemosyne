@@ -20,6 +20,8 @@ if __name__ == '__main__':
 		except EOFError:
 			exit()
 		if re.match(r'report,\w+,\w+,-?\d+$',inp):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_1carA = str(list_inp[1])
 			event_1carB = str(list_inp[2])
 			event_1distance = int(list_inp[3])

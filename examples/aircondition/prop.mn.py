@@ -25,6 +25,8 @@ if __name__ == '__main__':
 		except EOFError:
 			exit()
 		if re.match(r'set,\w+,-?\d+$',inp):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_1ac = str(list_inp[1])
 			event_1temp = int(list_inp[2])
 			event_1InBound = bool(event_1temp >=  17  and event_1temp <=  26 )
@@ -39,6 +41,8 @@ if __name__ == '__main__':
 
 
 		if re.match(r'turn_on,\w+$',inp):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_2ac = str(list_inp[1])
 			event_2Ac = str(event_2ac)
 			PAST_event_2ac = event_2ac
@@ -47,6 +51,8 @@ if __name__ == '__main__':
 
 
 		if re.match(r'turn_off,\w+$',inp):
+			_EVENT_NAME = str(list_inp[0])
+			_EVENT_PARAMS = list_inp[1:]
 			event_3ac = str(list_inp[1])
 			event_3Ac = str(event_3ac)
 			PAST_event_3ac = event_3ac

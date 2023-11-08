@@ -3,6 +3,13 @@
 
 Mnemosyne is a Go project designed to preprocess event data for the DejaVu runtime monitor.
 
+## Dependencies
+
+```sh
+go install github.com/blynn/nex
+go install golang.org/x/tools/cmd/goyacc@master 
+```
+
 ## Features
 
 - **Event Data Preprocessing:** Mnemosyne prepares event data for use with the DejaVu runtime monitor, making it easier to detect and analyze runtime events.
